@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+{% block content %}
+<h1 class="mb-4">Strategy Dashboard</h1>
+{% if strategies %}
+  <div class="row gy-4">
+    {% for strategy in strategies %}
+      <div class="col-12">
+        <div class="card">
+          <div class="card-body">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+              <div>
+                <h5 class="card-title">{{ strategy.name }}</h5>
+                <p class="card-text text-muted">{{ strategy.description or "No description available." }}</p>
+              </div>
+              <a href="/strategy/{{ strategy.id }}" class="btn btn-primary">View Strategy</a>
+            </div>
+            <table class="table table-sm table-striped">
+              <thead>
+                <tr>
+                  <th>Trade Count</th>
+                  <th>Win Rate</th>
+                  <th>Gross P&L</th>
+                  <th>Net P&L</th>
+                  <th>Max Drawdown</th>
+                  <th>Short Term</th>
+                  <th>Long Term</th>
+                  <th>Fees</th>
+                  <th>Slippage</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% set total_count = 0 %}
+                {% set total_gross = 0.0 %}
+                {% set total_net = 0.0 %}
+                {% set total_fee = 0.0 %}
+                {% set total_slippage = 0.0 %}
+                {% set total_short = 0.0 %}
+                {% set total_long = 0.0 %}
+                {% set max_dd = 0.0 %}
+                {% set win_rate = 0.0 %}
+                {% for metric in strategy.daily_metrics %}
+                  {% set total_count = total_count + metric.trade_count %}
+                  {% set total_gross = total_gross + metric.gross_pnl %}
+                  {% set total_net = total_net + metric.net_pnl %}
+                  {% set total_fee = total_fee + metric.fees_total %}
+                  {% set total_slippage = total_slippage + metric.slippage_total %}
+                  {% set total_short = total_short + metric.short_term_realized %}
+                  {% set total_long = total_long + metric.long_term_realized %}
+                  {% if metric.max_drawdown > max_dd %}
+                    {% set max_dd = metric.max_drawdown %}
+                  {% endif %}
+                  {% set win_rate = metric.win_rate %}
+                {% endfor %}
+                <tr>
+                  <td>{{ total_count }}</td>
+                  <td>{{ "{:.1f}}%".format(win_rate * 100) if total_count else "N/A" }}</td>
+                  <td>{{ "${:,.2f}".format(total_gross) }}</td>
+                  <td>{{ "${:,.2f}".format(total_net) }}</td>
+                  <td>{{ "${:,.2f}".format(max_dd) }}</td>
+                  <td>{{ "${:,.2f}".format(total_short) }}</td>
+                  <td>{{ "${:,.2f}".format(total_long) }}</td>
+                  <td>{{ "${:,.2f}".format(total_fee) }}</td>
+                  <td>{{ "${:,.2f}".format(total_slippage) }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+{% else %}
+  <div class="alert alert-info">No strategies are available yet.</div>
+{% endif %}
+{% endblock %}

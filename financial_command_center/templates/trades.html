@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Trades for {{ strategy.name }}</h1>
+{% if trades %}
+  <div class="table-responsive">
+    <table class="table table-hover table-bordered">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Ticker</th>
+          <th>Entry</th>
+          <th>Exit</th>
+          <th>Side</th>
+          <th>Size</th>
+          <th>Gross P&L</th>
+          <th>Net P&L</th>
+          <th>Fees</th>
+          <th>Slippage</th>
+          <th>Short Term</th>
+          <th>Long Term</th>
+          <th>Rule Break</th>
+          <th>Notes</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for trade in trades %}
+          <tr>
+            <td>{{ trade.id }}</td>
+            <td>{{ trade.ticker.symbol }}</td>
+            <td>{{ trade.timestamp_entry.strftime('%Y-%m-%d %H:%M') if trade.timestamp_entry else 'N/A' }}</td>
+            <td>{{ trade.timestamp_exit.strftime('%Y-%m-%d %H:%M') if trade.timestamp_exit else 'Open' }}</td>
+            <td>{{ trade.side }}</td>
+            <td>{{ trade.size }}</td>
+            <td>{{ "${:,.2f}".format(trade.gross_pnl or 0.0) }}</td>
+            <td>{{ "${:,.2f}".format(trade.net_pnl or 0.0) }}</td>
+            <td>{{ "${:,.2f}".format(trade.fees or 0.0) }}</td>
+            <td>{{ "${:,.2f}".format(trade.slippage or 0.0) }}</td>
+            <td>{{ "Yes" if trade.is_short_term else "No" }}</td>
+            <td>{{ "Yes" if trade.is_long_term else "No" }}</td>
+            <td>{{ "Yes" if trade.rule_break_flag else "No" }}</td>
+            <td>{{ trade.notes or "-" }}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+{% else %}
+  <div class="alert alert-info">No trades have been recorded yet for this strategy.</div>
+{% endif %}
+{% endblock %}

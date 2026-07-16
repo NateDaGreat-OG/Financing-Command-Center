@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block content %}
+<h1 class="mb-4">Tax Summary</h1>
+{% if summaries %}
+  <div class="table-responsive">
+    <table class="table table-striped table-bordered">
+      <thead>
+        <tr>
+          <th>Year</th>
+          <th>Short Term Gains</th>
+          <th>Short Term Losses</th>
+          <th>Long Term Gains</th>
+          <th>Long Term Losses</th>
+          <th>Harvested Losses</th>
+          <th>Estimated Tax Liability</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for summary in summaries %}
+          <tr>
+            <td>{{ summary.year }}</td>
+            <td>{{ "${:,.2f}".format(summary.short_term_gains) }}</td>
+            <td>{{ "${:,.2f}".format(summary.short_term_losses) }}</td>
+            <td>{{ "${:,.2f}".format(summary.long_term_gains) }}</td>
+            <td>{{ "${:,.2f}".format(summary.long_term_losses) }}</td>
+            <td>{{ "${:,.2f}".format(summary.harvested_losses) }}</td>
+            <td>{{ "${:,.2f}".format(summary.estimated_tax_liability) }}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+{% else %}
+  <div class="alert alert-secondary">No tax summaries have been entered yet.</div>
+{% endif %}
+{% endblock %}

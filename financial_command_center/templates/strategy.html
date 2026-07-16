@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <div>
+    <h1>{{ strategy.name }}</h1>
+    <p class="text-muted">{{ strategy.description or "No strategy description." }}</p>
+  </div>
+  <a href="/strategy/{{ strategy.id }}/trades" class="btn btn-secondary">View Trades</a>
+</div>
+
+<h2 class="h5 mb-3">Ticker Metrics</h2>
+{% if tickers %}
+  <div class="table-responsive">
+    <table class="table table-bordered table-hover">
+      <thead>
+        <tr>
+          <th>Ticker</th>
+          <th>Name</th>
+          <th>Sector</th>
+          <th>Position Count</th>
+          <th>Average Entry</th>
+          <th>Average Exit</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for ticker in tickers %}
+          <tr>
+            <td>{{ ticker.symbol }}</td>
+            <td>{{ ticker.name }}</td>
+            <td>{{ ticker.sector or "N/A" }}</td>
+            <td>{{ ticker.trades|selectattr('strategy_id', 'equalto', strategy.id)|list|length }}</td>
+            <td>
+              {% set entries = ticker.trades|selectattr('strategy_id', 'equalto', strategy.id)|map(attribute='entry_price')|list %}
+              {{ "${:,.2f}".format(entries|sum / entries|length) if entries else "N/A" }}
+            </td>
+            <td>
+              {% set exits = ticker.trades|selectattr('strategy_id', 'equalto', strategy.id)|map(attribute='exit_price')|select|list %}
+              {{ "${:,.2f}".format(exits|sum / exits|length) if exits else "N/A" }}
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+{% else %}
+  <div class="alert alert-info">No ticker metrics are available for this strategy.</div>
+{% endif %}
+
+<h2 class="h5 mt-5 mb-3">Recent Daily Metrics</h2>
+{% if metrics %}
+  <div class="table-responsive">
+    <table class="table table-sm table-striped">
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th>Trades</th>
+          <th>Gross P&L</th>
+          <th>Net P&L</th>
+          <th>Win Rate</th>
+          <th>Max Drawdown</th>
+          <th>Short-Term</th>
+          <th>Long-Term</th>
+          <th>Fees</th>
+          <th>Slippage</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for metric in metrics %}
+          <tr>
+            <td>{{ metric.date.strftime('%Y-%m-%d') }}</td>
+            <td>{{ metric.trade_count }}</td>
+            <td>{{ "${:,.2f}".format(metric.gross_pnl) }}</td>
+            <td>{{ "${:,.2f}".format(metric.net_pnl) }}</td>
+            <td>{{ "{:.1f}%".format(metric.win_rate * 100) }}</td>
+            <td>{{ "${:,.2f}".format(metric.max_drawdown) }}</td>
+            <td>{{ "${:,.2f}".format(metric.short_term_realized) }}</td>
+            <td>{{ "${:,.2f}".format(metric.long_term_realized) }}</td>
+            <td>{{ "${:,.2f}".format(metric.fees_total) }}</td>
+            <td>{{ "${:,.2f}".format(metric.slippage_total) }}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+{% else %}
+  <div class="alert alert-secondary">No recent metrics found for this strategy.</div>
+{% endif %}
+{% endblock %}

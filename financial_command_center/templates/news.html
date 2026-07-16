@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block content %}
+<h1 class="mb-4">Market News</h1>
+
+<h2 class="h5 mb-3">Global News</h2>
+{% if global_news %}
+  <div class="list-group mb-4">
+    {% for item in global_news %}
+      <a href="{{ item.url or '#' }}" class="list-group-item list-group-item-action" target="_blank">
+        <div class="d-flex w-100 justify-content-between">
+          <h5 class="mb-1">{{ item.headline }}</h5>
+          <small>{{ item.published_at.strftime('%Y-%m-%d') }}</small>
+        </div>
+        <p class="mb-1 text-muted">{{ item.source or 'Unknown source' }} • {{ item.category or 'General' }}</p>
+        <small class="badge bg-secondary">{{ item.impact_tag or 'Neutral' }}</small>
+      </a>
+    {% endfor %}
+  </div>
+{% else %}
+  <div class="alert alert-info">No market news available.</div>
+{% endif %}
+
+<h2 class="h5 mb-3">Ticker News</h2>
+{% if ticker_news %}
+  {% for symbol, items in ticker_news.items() %}
+    <div class="mb-4">
+      <h3>{{ symbol }}</h3>
+      <div class="list-group">
+        {% for item in items %}
+          <a href="{{ item.url or '#' }}" class="list-group-item list-group-item-action" target="_blank">
+            <div class="d-flex w-100 justify-content-between">
+              <h5 class="mb-1">{{ item.headline }}</h5>
+              <small>{{ item.published_at.strftime('%Y-%m-%d') }}</small>
+            </div>
+            <p class="mb-1 text-muted">{{ item.source or 'Unknown source' }} • {{ item.category or 'General' }}</p>
+            <small class="badge bg-info text-dark">{{ item.impact_tag or 'Neutral' }}</small>
+          </a>
+        {% endfor %}
+      </div>
+    </div>
+  {% endfor %}
+{% else %}
+  <div class="alert alert-secondary">No ticker-specific news has been published yet.</div>
+{% endif %}
+{% endblock %}
