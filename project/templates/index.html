@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Financing Command Center</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/css/bootstrap.min.css" crossorigin="anonymous" />
+  <link rel="stylesheet" href="/static/styles.css" />
+</head>
+<body>
+  <div class="container py-5">
+    <h1 class="mb-4">Financing Command Center</h1>
+    <div class="row g-4">
+      <div class="col-12 col-lg-4">
+        <div class="card p-4">
+          <div class="mb-3">
+            <label for="styleSelect" class="form-label">Trading Style</label>
+            <select id="styleSelect" class="form-select"></select>
+          </div>
+          <div class="mb-3">
+            <label for="strategySelect" class="form-label">Strategy</label>
+            <select id="strategySelect" class="form-select"></select>
+          </div>
+          <div class="mb-3">
+            <label for="symbolsInput" class="form-label">Symbols</label>
+            <input id="symbolsInput" type="text" class="form-control" placeholder="AAPL, MSFT, TSLA" />
+          </div>
+          <div class="d-grid gap-2">
+            <button id="backtestBtn" class="btn btn-primary">Run Backtest</button>
+            <button id="optimizeBtn" class="btn btn-warning">Optimize Strategy</button>
+            <button id="liveBtn" class="btn btn-outline-secondary">Run Live (Paper)</button>
+            <button id="trainRlBtn" class="btn btn-success">Train RL Agent</button>
+          </div>
+        </div>
+      </div>
+      <div class="col-12 col-lg-8">
+        <div class="card p-4 mb-4">
+          <h2>Backtest Metrics</h2>
+          <div id="backtestResults">Choose a strategy and run a backtest</div>
+        </div>
+        <div class="card p-4 mb-4">
+          <h2>Optimization</h2>
+          <div id="optimizeResults">Run optimization to tune strategy hyperparameters.</div>
+        </div>
+        <div class="card p-4 mb-4">
+          <h2>RL Training</h2>
+          <div id="rlTrainingResults">Train a DQN agent for live inference.</div>
+        </div>
+        <div class="card p-4 mb-4">
+          <h2>Live RL</h2>
+          <div id="rlRunResults">Run a trained RL agent in paper trading mode.</div>
+        </div>
+        <div class="card p-4 mb-4">
+          <h2>Recent Signals</h2>
+          <div id="signalsResults">No signals yet</div>
+        </div>
+        <div class="card p-4">
+          <h2>Trade Log</h2>
+          <div id="tradeLogResults">No trades yet</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script src="/static/main.js"></script>
+</body>
+</html>

@@ -1,0 +1,20 @@
+body {
+  background-color: #f2f4f8;
+  color: #263238;
+}
+
+.card {
+  border: none;
+  box-shadow: 0 1.5rem 3rem rgba(15, 23, 42, 0.06);
+}
+
+.btn-primary {
+  background-color: #1f78ff;
+  border-color: #1f78ff;
+}
+
+#backtestResults,
+#signalsResults,
+#tradeLogResults {
+  min-height: 150px;
+}
