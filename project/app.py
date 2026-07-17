@@ -267,6 +267,75 @@ def _derive_rl_metrics(data: pd.DataFrame) -> Dict[str, Any]:
     stability = float(1.0 / (1.0 + volatility))
     return {"average_reward": average_reward, "stability": float(np.clip(stability, 0.1, 1.0))}
 
+_RL_MODEL_DIR = os.path.join("instance", "rl_models")
+
+
+@app.route("/api/rl/train", methods=["POST"])
+def api_rl_train():
+    payload = request.get_json() or {}
+    agent_type = payload.get("agent", "dqn")
+    symbols = payload.get("symbols", [])
+    episodes = int(payload.get("episodes", 50))
+    timeframe = payload.get("timeframe", app.config["BACKTEST_TIMEFRAME"])
+
+    if agent_type != "dqn":
+        return jsonify({"error": "Only dqn agent is supported"}), 400
+    if not symbols:
+        return jsonify({"error": "symbols is required"}), 400
+
+    os.makedirs(_RL_MODEL_DIR, exist_ok=True)
+    results: Dict[str, Any] = {}
+    for symbol in symbols:
+        raw_data = alpaca.get_historical(symbol, timeframe=timeframe)
+        df = pd.DataFrame(raw_data.get("bars", []))
+        if df.empty:
+            results[symbol] = {"error": "no data available"}
+            continue
+        df = df.rename(
+            columns={"t": "timestamp", "o": "open", "h": "high", "l": "low", "c": "close", "v": "volume"}
+        )
+        df["timestamp"] = pd.to_datetime(df["timestamp"])
+        df = df.set_index("timestamp")
+        env = TradingEnv(data=df, capital=app.config["DEFAULT_CAPITAL"])
+        agent = DQNAgent(state_dim=17, action_dim=3)
+        model_path = os.path.join(_RL_MODEL_DIR, f"dqn_{symbol}.pth")
+        train_result = agent.train(env, episodes=episodes, checkpoint_interval=0)
+        agent.save_model(model_path)
+        results[symbol] = {
+            "episodes_trained": train_result["episodes"],
+            "best_reward": train_result["best_reward"],
+            "history": train_result["history"],
+            "model_saved": model_path,
+        }
+
+    return jsonify(results)
+
+
+@app.route("/api/rl/models", methods=["GET"])
+def api_rl_models():
+    registry: Dict[str, Any] = {}
+    if os.path.isdir(_RL_MODEL_DIR):
+        for filename in os.listdir(_RL_MODEL_DIR):
+            if filename.startswith("dqn_") and filename.endswith(".pth"):
+                symbol = filename[4:-4]
+                filepath = os.path.join(_RL_MODEL_DIR, filename)
+                stat = os.stat(filepath)
+                registry[symbol] = {
+                    "size_bytes": stat.st_size,
+                    "modified": stat.st_mtime,
+                }
+    return jsonify(registry)
+
+
+@app.route("/api/rl/models/<symbol>", methods=["DELETE"])
+def api_rl_model_delete(symbol: str):
+    model_path = os.path.join(_RL_MODEL_DIR, f"dqn_{symbol}.pth")
+    if not os.path.exists(model_path):
+        return jsonify({"error": "model not found"}), 404
+    os.remove(model_path)
+    return jsonify({"deleted": symbol})
+
+
 @app.route("/api/rl/run", methods=["POST"])
 def api_rl_run():
     payload = request.get_json() or {}
@@ -278,7 +347,7 @@ def api_rl_run():
     if not symbol:
         return jsonify({"error": "symbol is required"}), 400
 
-    model_path = os.path.join("instance", "rl_models", f"dqn_{symbol}.pkl")
+    model_path = os.path.join(_RL_MODEL_DIR, f"dqn_{symbol}.pth")
     if not os.path.exists(model_path):
         return jsonify({"error": "model not found"}), 404
 

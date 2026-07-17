@@ -1,6 +1,7 @@
 const styleSelect = document.getElementById("styleSelect");
 const strategySelect = document.getElementById("strategySelect");
 const symbolsInput = document.getElementById("symbolsInput");
+const rlEpisodesInput = document.getElementById("rlEpisodesInput");
 const backtestBtn = document.getElementById("backtestBtn");
 const optimizeBtn = document.getElementById("optimizeBtn");
 const runAllocationBtn = document.getElementById("runAllocationBtn");
@@ -12,9 +13,15 @@ const optimizeResults = document.getElementById("optimizeResults");
 const capitalAllocationResults = document.getElementById("capitalAllocationResults");
 const cycleAnalysisResults = document.getElementById("cycleAnalysisResults");
 const rlTrainingResults = document.getElementById("rlTrainingResults");
+const rlRewardChartWrap = document.getElementById("rlRewardChartWrap");
+const rlTrainingLog = document.getElementById("rlTrainingLog");
+const rlTrainingLogBody = document.getElementById("rlTrainingLogBody");
+const rlModelRegistry = document.getElementById("rlModelRegistry");
 const rlRunResults = document.getElementById("rlRunResults");
 const signalsResults = document.getElementById("signalsResults");
 const tradeLogResults = document.getElementById("tradeLogResults");
+
+let rewardChart = null;
 
 async function fetchStyles() {
   const response = await fetch("/api/styles");
@@ -122,17 +129,85 @@ async function runOptimization() {
   `;
 }
 
+function renderRewardChart(symbolResults) {
+  // Collect all (episode, reward) pairs across symbols, keyed by symbol
+  const datasets = [];
+  const palette = ["#1f78ff", "#56d364", "#f78166", "#e3b341", "#79c0ff", "#d2a8ff"];
+  let idx = 0;
+  for (const [symbol, result] of Object.entries(symbolResults)) {
+    if (!result.history) continue;
+    datasets.push({
+      label: symbol,
+      data: result.history.map(h => ({x: h.episode, y: parseFloat(h.reward.toFixed(4))})),
+      borderColor: palette[idx % palette.length],
+      backgroundColor: "transparent",
+      tension: 0.3,
+      pointRadius: 2,
+    });
+    idx++;
+  }
+  if (!datasets.length) return;
+
+  rlRewardChartWrap.style.display = "block";
+  const ctx = document.getElementById("rlRewardChart").getContext("2d");
+  if (rewardChart) {
+    rewardChart.destroy();
+  }
+  rewardChart = new Chart(ctx, {
+    type: "line",
+    data: {datasets},
+    options: {
+      responsive: true,
+      parsing: false,
+      plugins: {
+        legend: {position: "top"},
+        title: {display: true, text: "Episode Reward Curve"},
+      },
+      scales: {
+        x: {type: "linear", title: {display: true, text: "Episode"}},
+        y: {title: {display: true, text: "Reward"}},
+      },
+    },
+  });
+}
+
+function renderTrainingLog(symbolResults) {
+  const rows = [];
+  for (const [symbol, result] of Object.entries(symbolResults)) {
+    if (!result.history) continue;
+    for (const h of result.history) {
+      rows.push(`
+        <div class="log-row">
+          <span class="log-ep">${symbol} ep ${h.episode}</span>
+          <span class="log-reward">r=${h.reward.toFixed(3)}</span>
+          <span class="log-loss">loss=${h.avg_loss.toFixed(4)}</span>
+          <span class="log-eps">ε=${h.epsilon.toFixed(3)}</span>
+        </div>`);
+    }
+  }
+  if (!rows.length) return;
+  rlTrainingLog.style.display = "block";
+  rlTrainingLogBody.innerHTML = rows.join("");
+  // scroll to bottom
+  rlTrainingLogBody.scrollTop = rlTrainingLogBody.scrollHeight;
+}
+
 async function trainRLAgent() {
   const symbols = symbolsInput.value.split(",").map(s => s.trim()).filter(Boolean);
+  const episodes = parseInt(rlEpisodesInput.value, 10) || 50;
   if (!symbols.length) {
     alert("Please provide symbols.");
     return;
   }
 
+  rlTrainingResults.innerHTML = `<div class="text-muted">Training DQN agent for ${symbols.join(", ")} over ${episodes} episodes…</div>`;
+  rlRewardChartWrap.style.display = "none";
+  rlTrainingLog.style.display = "none";
+
   const response = await fetch("/api/rl/train", {
     method: "POST",
     headers: {"Content-Type": "application/json"},
-    body: JSON.stringify({agent: "dqn", symbols, episodes: 50, timeframe: "1D"}),
+    body: JSON.stringify({agent: "dqn", symbols, episodes, timeframe: "1D"}),
   });
 
   const data = await response.json();
@@ -141,7 +216,71 @@ async function trainRLAgent() {
     return;
   }
 
-  rlTrainingResults.innerHTML = `<pre>${JSON.stringify(data, null, 2)}</pre>`;
+  // Summary
+  const summaryRows = Object.entries(data).map(([sym, res]) => {
+    if (res.error) return `<tr><td>${sym}</td><td colspan="3" class="text-danger">${res.error}</td></tr>`;
+    return `<tr>
+      <td>${sym}</td>
+      <td>${res.episodes_trained}</td>
+      <td>${res.best_reward !== undefined ? res.best_reward.toFixed(4) : "—"}</td>
+      <td><span class="badge bg-success">Saved</span></td>
+    </tr>`;
+  }).join("");
+
+  rlTrainingResults.innerHTML = `
+    <table class="table table-sm table-striped mb-0">
+      <thead><tr><th>Symbol</th><th>Episodes</th><th>Best Reward</th><th>Model</th></tr></thead>
+      <tbody>${summaryRows}</tbody>
+    </table>`;
+
+  renderRewardChart(data);
+  renderTrainingLog(data);
+  await fetchRLModels();
+}
+
+async function fetchRLModels() {
+  const response = await fetch("/api/rl/models");
+  if (!response.ok) {
+    rlModelRegistry.innerHTML = `<div class="text-danger">Could not load model registry</div>`;
+    return;
+  }
+  const models = await response.json();
+  const symbols = Object.keys(models);
+  if (!symbols.length) {
+    rlModelRegistry.innerHTML = `<p class="text-muted">No trained models yet. Train an agent to see models here.</p>`;
+    return;
+  }
+
+  const rows = symbols.map(sym => {
+    const m = models[sym];
+    const kb = (m.size_bytes / 1024).toFixed(1);
+    const modified = new Date(m.modified * 1000).toLocaleString();
+    return `<tr>
+      <td>${sym}</td>
+      <td>${kb} KB</td>
+      <td>${modified}</td>
+      <td>
+        <button class="btn btn-sm btn-outline-danger" onclick="deleteRLModel('${sym}')">Delete</button>
+      </td>
+    </tr>`;
+  }).join("");
+
+  rlModelRegistry.innerHTML = `
+    <table class="table table-sm table-striped mb-0">
+      <thead><tr><th>Symbol</th><th>Size</th><th>Last Modified</th><th></th></tr></thead>
+      <tbody>${rows}</tbody>
+    </table>`;
+}
+
+async function deleteRLModel(symbol) {
+  if (!confirm(`Delete RL model for ${symbol}?`)) return;
+  const response = await fetch(`/api/rl/models/${symbol}`, {method: "DELETE"});
+  if (!response.ok) {
+    const data = await response.json();
+    alert(data.error || "Delete failed");
+    return;
+  }
+  await fetchRLModels();
 }
 
 async function runRLAgent() {
@@ -252,3 +391,4 @@ trainRlBtn.addEventListener("click", trainRLAgent);
 liveBtn.addEventListener("click", runLive);
 
 fetchStyles();
+fetchRLModels();
