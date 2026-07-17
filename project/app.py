@@ -21,17 +21,21 @@ from project.rl.dqn_agent import DQNAgent
 from project.rl.rl_utils import save_model, load_model
 
 # Only allow symbols that look like real tickers (e.g. AAPL, BRK.B, SPY).
-_SYMBOL_RE = re.compile(r'^[A-Za-z0-9.\-]{1,20}$')
+# Must start and end with alphanumeric; optionally separated by a single dot or hyphen.
+_SYMBOL_RE = re.compile(r'^[A-Za-z0-9]([A-Za-z0-9.\-]{0,18}[A-Za-z0-9])?$')
 
 
 def _validate_symbol(symbol: str) -> bool:
     """Return True only when the symbol contains safe, ticker-like characters."""
-    return bool(symbol and _SYMBOL_RE.match(symbol))
+    if not symbol or ".." in symbol:
+        return False
+    return bool(_SYMBOL_RE.match(symbol))
 
 
 def _normalize_bar_columns(df: pd.DataFrame) -> pd.DataFrame:
     """Rename Alpaca's single-letter bar columns to human-readable names."""
     return df.rename(columns={"t": "timestamp", "o": "open", "h": "high", "l": "low", "c": "close", "v": "volume"})
+
 
 app = Flask(__name__, template_folder="templates", static_folder="static")
 app.config.from_object("config")
@@ -282,6 +286,21 @@ def _derive_rl_metrics(data: pd.DataFrame) -> Dict[str, Any]:
     return {"average_reward": average_reward, "stability": float(np.clip(stability, 0.1, 1.0))}
 
 _RL_MODEL_DIR = os.path.join("instance", "rl_models")
+# Resolved once at import time so containment checks are stable regardless of cwd changes.
+_RL_MODEL_DIR_ABS = os.path.realpath(os.path.abspath(_RL_MODEL_DIR))
+
+
+def _safe_model_path(symbol: str) -> Optional[str]:
+    """Return the absolute model path for *symbol*, or None if it would escape the model dir.
+
+    This is defense-in-depth on top of ``_validate_symbol``: even if a symbol somehow
+    passed validation, ``os.path.realpath`` resolves any remaining traversal sequences
+    and the containment check prevents writes/reads outside ``_RL_MODEL_DIR``.
+    """
+    candidate = os.path.realpath(os.path.abspath(os.path.join(_RL_MODEL_DIR, f"dqn_{symbol}.pth")))
+    if not candidate.startswith(_RL_MODEL_DIR_ABS + os.sep):
+        return None
+    return candidate
 
 
 @app.route("/api/rl/train", methods=["POST"])
@@ -303,6 +322,10 @@ def api_rl_train():
         if not _validate_symbol(symbol):
             results[symbol] = {"error": "invalid symbol"}
             continue
+        model_path = _safe_model_path(symbol)
+        if model_path is None:
+            results[symbol] = {"error": "invalid symbol"}
+            continue
         raw_data = alpaca.get_historical(symbol, timeframe=timeframe)
         df = pd.DataFrame(raw_data.get("bars", []))
         if df.empty:
@@ -313,7 +336,6 @@ def api_rl_train():
         df = df.set_index("timestamp")
         env = TradingEnv(data=df, capital=app.config["DEFAULT_CAPITAL"])
         agent = DQNAgent(state_dim=17, action_dim=3)
-        model_path = os.path.join(_RL_MODEL_DIR, f"dqn_{symbol}.pth")
         train_result = agent.train(env, episodes=episodes, checkpoint_interval=0)
         agent.save_model(model_path)
         results[symbol] = {
@@ -346,7 +368,9 @@ def api_rl_models():
 def api_rl_model_delete(symbol: str):
     if not _validate_symbol(symbol):
         return jsonify({"error": "invalid symbol"}), 400
-    model_path = os.path.join(_RL_MODEL_DIR, f"dqn_{symbol}.pth")
+    model_path = _safe_model_path(symbol)
+    if model_path is None:
+        return jsonify({"error": "invalid symbol"}), 400
     if not os.path.exists(model_path):
         return jsonify({"error": "model not found"}), 404
     os.remove(model_path)
@@ -366,7 +390,9 @@ def api_rl_run():
     if not _validate_symbol(symbol):
         return jsonify({"error": "invalid symbol"}), 400
 
-    model_path = os.path.join(_RL_MODEL_DIR, f"dqn_{symbol}.pth")
+    model_path = _safe_model_path(symbol)
+    if model_path is None:
+        return jsonify({"error": "invalid symbol"}), 400
     if not os.path.exists(model_path):
         return jsonify({"error": "model not found"}), 404
 
