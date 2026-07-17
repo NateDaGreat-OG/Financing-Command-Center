@@ -413,5 +413,293 @@ rlModelRegistry.addEventListener("click", event => {
   }
 });
 
+// ============================================================
+// Intelligence Layer UI elements
+// ============================================================
+
+const intelBacktestBtn = document.getElementById("intelBacktestBtn");
+const intelOptimizeBtn = document.getElementById("intelOptimizeBtn");
+const intelLiveBtn = document.getElementById("intelLiveBtn");
+const intelDiagnosticsBtn = document.getElementById("intelDiagnosticsBtn");
+
+const intelligenceResults = document.getElementById("intelligenceResults");
+const cycleResults = document.getElementById("cycleResults");
+const rlIntelResults = document.getElementById("rlIntelResults");
+const riskResults = document.getElementById("riskResults");
+const capitalIntelResults = document.getElementById("capitalIntelResults");
+const executionResults = document.getElementById("executionResults");
+const governanceResults = document.getElementById("governanceResults");
+const diagnosticsResults = document.getElementById("diagnosticsResults");
+
+// ============================================================
+// Intelligence Layer functions
+// ============================================================
+
+async function runIntelligenceBacktest() {
+  const strategy = strategySelect.value;
+  const symbols = symbolsInput.value.split(",").map(s => s.trim()).filter(Boolean);
+  if (!strategy || !symbols.length) {
+    alert("Please select a strategy and provide symbols.");
+    return;
+  }
+
+  intelligenceResults.innerHTML = `<div class="text-muted">Running intelligence-enriched backtest…</div>`;
+
+  const response = await fetch("/api/intel/backtest", {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({strategy, symbols}),
+  });
+
+  const data = await response.json();
+  if (!response.ok) {
+    intelligenceResults.innerHTML = `<div class="text-danger">${escapeHtml(data.error || "Intelligence backtest failed")}</div>`;
+    return;
+  }
+
+  const m = data.metrics || {};
+  intelligenceResults.innerHTML = `
+    <div class="row">
+      <div class="col-4"><strong>Sharpe (ann.):</strong> ${escapeHtml(String(m.annualized_sharpe ?? m.sharpe ?? "–"))}</div>
+      <div class="col-4"><strong>Sortino:</strong> ${escapeHtml(String(m.sortino ?? "–"))}</div>
+      <div class="col-4"><strong>Profit Factor:</strong> ${escapeHtml(String(m.profit_factor ?? "–"))}</div>
+    </div>
+    <div class="row mt-2">
+      <div class="col-4"><strong>Expectancy:</strong> ${escapeHtml(String(m.expectancy ?? "–"))}</div>
+      <div class="col-4"><strong>Max Drawdown:</strong> ${escapeHtml(String(m.max_drawdown ?? "–"))}</div>
+      <div class="col-4"><strong>Win Rate:</strong> ${escapeHtml(String(m.win_rate ?? "–"))}%</div>
+    </div>
+    <div class="row mt-2">
+      <div class="col-4"><strong>CAGR:</strong> ${escapeHtml(String(m.cagr ?? "–"))}%</div>
+      <div class="col-4"><strong>Trades:</strong> ${escapeHtml(String(m.trade_count ?? "–"))}</div>
+      <div class="col-4"><strong>Final Equity:</strong> $${escapeHtml(String(m.final_equity ?? "–"))}</div>
+    </div>`;
+
+  if (data.intelligence_diagnostics) {
+    displayDiagnostics(data.intelligence_diagnostics);
+  }
+}
+
+async function runIntelligenceOptimizer() {
+  const strategy = strategySelect.value;
+  const symbols = symbolsInput.value.split(",").map(s => s.trim()).filter(Boolean);
+  if (!strategy || !symbols.length) {
+    alert("Please select a strategy and provide symbols.");
+    return;
+  }
+
+  intelligenceResults.innerHTML = `<div class="text-muted">Running intelligence optimizer…</div>`;
+
+  const response = await fetch("/api/intel/optimize", {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({strategy, symbols, objective: "max_sharpe", method: "grid"}),
+  });
+
+  const data = await response.json();
+  if (!response.ok) {
+    intelligenceResults.innerHTML = `<div class="text-danger">${escapeHtml(data.error || "Intelligence optimizer failed")}</div>`;
+    return;
+  }
+
+  intelligenceResults.innerHTML = `
+    <div><strong>Method:</strong> ${escapeHtml(data.method || "grid")}</div>
+    <div class="mt-2"><strong>Best Score:</strong> ${escapeHtml(String(data.best_score ?? "–"))}</div>
+    <div class="mt-2"><strong>Best Params:</strong> <pre>${escapeHtml(JSON.stringify(data.best_params, null, 2))}</pre></div>
+    <div><strong>Best Metrics:</strong> <pre>${escapeHtml(JSON.stringify(data.best_metrics, null, 2))}</pre></div>`;
+
+  if (data.best_intel_diagnostics) {
+    displayDiagnostics(data.best_intel_diagnostics);
+  }
+}
+
+async function runIntelligenceLive() {
+  const strategy = strategySelect.value;
+  const symbols = symbolsInput.value.split(",").map(s => s.trim()).filter(Boolean);
+  if (!strategy || !symbols.length) {
+    alert("Please select a strategy and provide symbols.");
+    return;
+  }
+
+  intelligenceResults.innerHTML = `<div class="text-muted">Running intelligence live engine (dry run)…</div>`;
+
+  const response = await fetch("/api/intel/live", {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({strategy, symbols, dry_run: true}),
+  });
+
+  const data = await response.json();
+  if (!response.ok) {
+    intelligenceResults.innerHTML = `<div class="text-danger">${escapeHtml(data.error || "Intelligence live failed")}</div>`;
+    return;
+  }
+
+  intelligenceResults.innerHTML = `
+    <div><strong>Status:</strong> ${escapeHtml(data.status || "")}</div>
+    <div><strong>Total Signals:</strong> ${escapeHtml(String(data.total_signals ?? 0))}</div>
+    <div><strong>Orders Submitted:</strong> ${escapeHtml(String((data.orders_submitted || []).length))}</div>`;
+
+  if (data.diagnostics) {
+    displayDiagnostics(data.diagnostics);
+  }
+}
+
+async function fetchAndShowDiagnostics() {
+  const strategy = strategySelect.value;
+  const symbols = symbolsInput.value.split(",").map(s => s.trim()).filter(Boolean);
+  if (!strategy || !symbols.length) {
+    alert("Please select a strategy and provide symbols.");
+    return;
+  }
+
+  diagnosticsResults.innerHTML = `<div class="text-muted">Loading diagnostics…</div>`;
+
+  const response = await fetch("/api/intel/diagnostics", {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({strategy, symbols}),
+  });
+
+  const data = await response.json();
+  if (!response.ok) {
+    diagnosticsResults.innerHTML = `<div class="text-danger">${escapeHtml(data.error || "Diagnostics failed")}</div>`;
+    return;
+  }
+
+  displayDiagnostics(data);
+}
+
+// ============================================================
+// Display helpers for each intelligence panel
+// ============================================================
+
+function displayDiagnostics(diag) {
+  if (!diag) return;
+  diagnosticsResults.innerHTML = `<pre class="small">${escapeHtml(JSON.stringify(diag, null, 2))}</pre>`;
+  if (diag.ai) displayIntelligence(diag.ai);
+  if (diag.cycle) displayCycle(diag.cycle);
+  if (diag.rl) displayRL(diag.rl);
+  if (diag.risk) displayRisk(diag.risk);
+  if (diag.capital) displayCapital(diag.capital);
+  if (diag.execution) displayExecution(diag.execution);
+  if (diag.governance) displayGovernance(diag.governance);
+}
+
+function displayIntelligence(ai) {
+  if (!ai) return;
+  const topSignals = (ai.top_signals || []).map(s => `
+    <tr>
+      <td>${escapeHtml(s.symbol || "")}</td>
+      <td>${escapeHtml(s.side || "")}</td>
+      <td>${escapeHtml(String(s.ai_score ?? "–"))}</td>
+      <td>${escapeHtml(String(s.entry_price ?? "–"))}</td>
+      <td>${escapeHtml(String(s.size ?? "–"))}</td>
+    </tr>`).join("");
+  intelligenceResults.innerHTML = `
+    <div class="row">
+      <div class="col-4"><strong>Signals:</strong> ${escapeHtml(String(ai.signal_count ?? 0))}</div>
+      <div class="col-4"><strong>Avg AI Score:</strong> ${escapeHtml(String(ai.avg_ai_score ?? "–"))}</div>
+      <div class="col-4"><strong>Strategy:</strong> ${escapeHtml(ai.strategy || "–")}</div>
+    </div>
+    ${topSignals ? `<table class="table table-sm mt-2"><thead><tr><th>Symbol</th><th>Side</th><th>Score</th><th>Entry</th><th>Size</th></tr></thead><tbody>${topSignals}</tbody></table>` : ""}`;
+}
+
+function displayCycle(cycle) {
+  if (!cycle) return;
+  cycleResults.innerHTML = `
+    <div class="row">
+      <div class="col-4"><strong>Trend:</strong> <span class="badge bg-secondary">${escapeHtml(cycle.trend || "–")}</span></div>
+      <div class="col-4"><strong>Volatility:</strong> <span class="badge bg-secondary">${escapeHtml(cycle.volatility || "–")}</span></div>
+      <div class="col-4"><strong>Liquidity:</strong> <span class="badge bg-secondary">${escapeHtml(cycle.liquidity || "–")}</span></div>
+    </div>
+    <div class="row mt-2">
+      <div class="col-4"><strong>Macro:</strong> <span class="badge bg-secondary">${escapeHtml(cycle.macro || "–")}</span></div>
+      <div class="col-4"><strong>Intraday:</strong> <span class="badge bg-secondary">${escapeHtml(cycle.intraday || "–")}</span></div>
+      <div class="col-4"><strong>Sector:</strong> ${escapeHtml(JSON.stringify(cycle.sector_rotation || {}))}</div>
+    </div>
+    ${Object.keys(cycle.cycle_params || {}).length ? `<div class="mt-2"><strong>Cycle Params:</strong> <pre class="small">${escapeHtml(JSON.stringify(cycle.cycle_params, null, 2))}</pre></div>` : ""}`;
+}
+
+function displayRL(rl) {
+  if (!rl) return;
+  rlIntelResults.innerHTML = `
+    <div class="row">
+      <div class="col-4"><strong>Action:</strong> ${escapeHtml(String(rl.rl_action ?? "–"))}</div>
+      <div class="col-4"><strong>Confidence:</strong> ${escapeHtml(String(rl.rl_confidence ?? "–"))}</div>
+      <div class="col-4"><strong>AI Score:</strong> ${escapeHtml(String(rl.rl_ai_score ?? "–"))}</div>
+    </div>
+    <div class="mt-2"><strong>Recent Actions:</strong> ${escapeHtml(JSON.stringify(rl.recent_actions || []))}</div>`;
+}
+
+function displayRisk(risk) {
+  if (!risk) return;
+  riskResults.innerHTML = `
+    <div class="row">
+      <div class="col-4"><strong>Leverage:</strong> ${escapeHtml(String(risk.dynamic_leverage ?? "–"))}</div>
+      <div class="col-4"><strong>Drawdown:</strong> ${escapeHtml(String(risk.current_drawdown ?? "–"))}</div>
+      <div class="col-4"><strong>Breached:</strong> <span class="badge ${risk.drawdown_breached ? "bg-danger" : "bg-success"}">${risk.drawdown_breached ? "YES" : "NO"}</span></div>
+    </div>
+    <div class="row mt-2">
+      <div class="col-4"><strong>Target Vol:</strong> ${escapeHtml(String(risk.target_vol ?? "–"))}</div>
+      <div class="col-4"><strong>Max DD:</strong> ${escapeHtml(String(risk.max_portfolio_drawdown ?? "–"))}</div>
+      <div class="col-4"><strong>Signals:</strong> ${escapeHtml(String(risk.signal_count ?? "–"))}</div>
+    </div>`;
+}
+
+function displayCapital(capital) {
+  if (!capital) return;
+  const summaryRows = Object.entries(capital.allocation_summary || {}).map(([strat, syms]) =>
+    `<tr><td>${escapeHtml(strat)}</td><td><pre class="small mb-0">${escapeHtml(JSON.stringify(syms, null, 2))}</pre></td></tr>`
+  ).join("");
+  capitalIntelResults.innerHTML = `
+    <div class="row">
+      <div class="col-6"><strong>Total Allocated:</strong> $${escapeHtml(String(capital.total_allocated ?? 0))}</div>
+      <div class="col-6"><strong>Strategies:</strong> ${escapeHtml((capital.strategies || []).join(", ") || "–")}</div>
+    </div>
+    ${summaryRows ? `<table class="table table-sm mt-2"><thead><tr><th>Strategy</th><th>Allocation</th></tr></thead><tbody>${summaryRows}</tbody></table>` : ""}`;
+}
+
+function displayExecution(exec) {
+  if (!exec) return;
+  const win = exec.execution_window || {};
+  executionResults.innerHTML = `
+    <div class="row">
+      <div class="col-4"><strong>Signals:</strong> ${escapeHtml(String(exec.signal_count ?? 0))}</div>
+      <div class="col-4"><strong>Est. Slippage:</strong> $${escapeHtml(String(exec.total_estimated_slippage ?? 0))}</div>
+      <div class="col-4"><strong>Slippage bps:</strong> ${escapeHtml(String(exec.slippage_bps ?? "–"))}</div>
+    </div>
+    <div class="row mt-2">
+      <div class="col-4"><strong>Execute Now:</strong> <span class="badge ${win.execute_now ? "bg-success" : "bg-secondary"}">${win.execute_now ? "YES" : "NO"}</span></div>
+      <div class="col-4"><strong>Urgency:</strong> ${escapeHtml(win.urgency || "–")}</div>
+      <div class="col-4"><strong>Session:</strong> ${escapeHtml(win.intraday_session || "–")}</div>
+    </div>
+    <div class="mt-2 small text-muted">${escapeHtml(win.reason || "")}</div>`;
+}
+
+function displayGovernance(gov) {
+  if (!gov) return;
+  const disabled = (gov.disabled_strategies || []).map(s => `<span class="badge bg-danger me-1">${escapeHtml(s)}</span>`).join("");
+  const reduced = (gov.capital_reduced_strategies || []).map(s => `<span class="badge bg-warning text-dark me-1">${escapeHtml(s)}</span>`).join("");
+  governanceResults.innerHTML = `
+    <div class="row">
+      <div class="col-4"><strong>Monitored:</strong> ${escapeHtml(String(gov.strategy_count ?? 0))}</div>
+      <div class="col-8"><strong>Disabled:</strong> ${disabled || '<span class="text-success">None</span>'}</div>
+    </div>
+    <div class="row mt-2">
+      <div class="col-4"><strong>Capital Reduced:</strong></div>
+      <div class="col-8">${reduced || '<span class="text-success">None</span>'}</div>
+    </div>`;
+}
+
+// ============================================================
+// Wire intelligence layer buttons
+// ============================================================
+
+intelBacktestBtn.addEventListener("click", runIntelligenceBacktest);
+intelOptimizeBtn.addEventListener("click", runIntelligenceOptimizer);
+intelLiveBtn.addEventListener("click", runIntelligenceLive);
+intelDiagnosticsBtn.addEventListener("click", fetchAndShowDiagnostics);
+
 fetchStyles();
 fetchRLModels();

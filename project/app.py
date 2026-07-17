@@ -8,14 +8,21 @@ from typing import Any, Dict, List, Optional
 from services.alpaca_client import AlpacaClient
 from services.massive_client import MassiveClient
 from services.cycle_data_client import CycleDataClient
-from core.strategy_registry import list_styles, list_strategies_for_style, load_strategy
+from core.strategy_registry import list_styles, list_strategies_for_style, load_strategy, create_intelligence_layer
 from core.optimizer import optimize_strategy, run_grid_search, run_random_search, run_bayesian_optimization
 from core.search_spaces import DEFAULT_SEARCH_SPACES
 from core.capital_manager import CapitalManager
 from core.cycle_analyzer import CycleAnalyzer
+from core.diagnostics_layer import DiagnosticsLayer
+from core.portfolio_risk_engine import PortfolioRiskEngine
+from core.execution_intelligence import ExecutionIntelligence
+from core.strategy_governance import StrategyGovernance
 from backtest.backtester import Backtester
 from core.risk_manager import RiskManager
 from core.trade_logger import TradeLogger
+from services.backtester_intel_adapter import BacktesterIntelAdapter
+from services.optimizer_intel_adapter import OptimizerIntelAdapter
+from services.live_trading_orchestrator import LiveTradingOrchestrator
 from project.rl.trading_env import TradingEnv
 from project.rl.dqn_agent import DQNAgent
 from project.rl.rl_utils import save_model, load_model
@@ -59,6 +66,17 @@ if app.config.get("CYCLE_DATA_API_KEY") and app.config.get("CYCLE_DATA_BASE_URL"
 
 cycle_analyzer = CycleAnalyzer(macro_client=massive, config=app.config)
 capital_manager = CapitalManager(config=app.config, risk_manager=RiskManager(app.config))
+
+intelligence_layer = create_intelligence_layer(
+    config=app.config,
+    cycle_analyzer=cycle_analyzer,
+    capital_manager=capital_manager,
+    risk_manager=RiskManager(app.config),
+)
+portfolio_risk_engine = PortfolioRiskEngine(config=app.config)
+execution_intelligence = ExecutionIntelligence(config=app.config)
+strategy_governance = StrategyGovernance(config=app.config)
+diagnostics_layer = DiagnosticsLayer(config=app.config)
 
 @app.route("/")
 def index():
@@ -441,6 +459,205 @@ def api_live():
     account = alpaca.get_account()
     positions = alpaca.get_positions()
     return jsonify({"status": "live started", "account": account, "positions": positions, "results": live_signals})
+
+@app.route("/api/intel/backtest", methods=["POST"])
+def api_intel_backtest():
+    """Intelligence-enriched backtest endpoint.
+
+    Accepts the same payload as /api/backtest but runs signals through the
+    full StrategyIntelligence pipeline and returns expanded metrics plus
+    equity/drawdown curves and diagnostics.
+    """
+    payload = request.get_json() or {}
+    strategy_name = payload.get("strategy")
+    symbols = payload.get("symbols", [])
+    capital = float(payload.get("capital", app.config["DEFAULT_CAPITAL"]))
+    slippage = float(payload.get("slippage", app.config.get("DEFAULT_SLIPPAGE", 0.0005)))
+    commission = float(payload.get("commission", app.config.get("DEFAULT_COMMISSION", 0.001)))
+
+    if not strategy_name or not symbols:
+        return jsonify({"error": "strategy and symbols are required"}), 400
+
+    strategy = load_strategy(strategy_name)
+    if not strategy:
+        return jsonify({"error": "strategy not found"}), 404
+
+    historical_data = {}
+    for symbol in symbols:
+        historical_data[symbol] = alpaca.get_historical(symbol, timeframe=app.config["BACKTEST_TIMEFRAME"])
+
+    adapter = BacktesterIntelAdapter(
+        strategy_module=strategy,
+        config=app.config,
+        capital=capital,
+        slippage=slippage,
+        commission=commission,
+        intelligence=intelligence_layer,
+        logger=logger,
+    )
+    result = adapter.run(historical_data, strategy_name=strategy_name)
+    return jsonify(result)
+
+
+@app.route("/api/intel/optimize", methods=["POST"])
+def api_intel_optimize():
+    """Intelligence-enriched optimizer endpoint.
+
+    Supports ``method`` = ``"grid"``, ``"random"``, or ``"bayesian"``.
+    Uses intelligence-aware backtests for all evaluations.
+    """
+    payload = request.get_json() or {}
+    strategy_name = payload.get("strategy")
+    symbols = payload.get("symbols", [])
+    objective = payload.get("objective", "max_sharpe")
+    method = payload.get("method", "grid")
+    iterations = int(payload.get("iterations", 10))
+    parallel = bool(payload.get("parallel", False))
+
+    if not strategy_name or not symbols:
+        return jsonify({"error": "strategy and symbols are required"}), 400
+
+    search_space = DEFAULT_SEARCH_SPACES.get(strategy_name)
+    if not search_space:
+        return jsonify({"error": "search space not found for strategy"}), 404
+
+    strategy = load_strategy(strategy_name)
+    if not strategy:
+        return jsonify({"error": "strategy not found"}), 404
+
+    historical_data = {}
+    for symbol in symbols:
+        historical_data[symbol] = alpaca.get_historical(symbol, timeframe=app.config["BACKTEST_TIMEFRAME"])
+
+    optimizer = OptimizerIntelAdapter(
+        strategy_module=strategy,
+        search_space=search_space,
+        historical_data=historical_data,
+        config=app.config,
+        intelligence=intelligence_layer,
+        logger=logger,
+        objective=objective,
+    )
+
+    if method == "random":
+        result = optimizer.run_random_search(iterations=iterations, strategy_name=strategy_name, parallel=parallel)
+    elif method == "bayesian":
+        result = optimizer.run_bayesian_optimization(iterations=iterations, strategy_name=strategy_name)
+    else:
+        result = optimizer.run_grid_search(strategy_name=strategy_name, parallel=parallel)
+
+    return jsonify(result)
+
+
+@app.route("/api/intel/live", methods=["POST"])
+def api_intel_live():
+    """Intelligence-enriched live trading endpoint.
+
+    Runs the full intelligence pipeline (AI signals + execution intelligence +
+    portfolio risk + governance) for each symbol and returns signals and diagnostics.
+    Orders are only submitted when ``dry_run`` is False in the payload.
+    """
+    payload = request.get_json() or {}
+    strategy_name = payload.get("strategy")
+    symbols = payload.get("symbols", [])
+    dry_run = bool(payload.get("dry_run", True))
+
+    if not strategy_name or not symbols:
+        return jsonify({"error": "strategy and symbols are required"}), 400
+
+    strategy = load_strategy(strategy_name)
+    if not strategy:
+        return jsonify({"error": "strategy not found"}), 404
+
+    orchestrator = LiveTradingOrchestrator(
+        strategy_module=strategy,
+        alpaca=alpaca,
+        config=app.config,
+        intelligence=intelligence_layer,
+        portfolio_risk=portfolio_risk_engine,
+        execution=execution_intelligence,
+        governance=strategy_governance,
+        trade_logger=logger,
+        dry_run=dry_run,
+    )
+
+    result = orchestrator.run(symbols=symbols)
+    return jsonify(result)
+
+
+@app.route("/api/intel/diagnostics", methods=["POST"])
+def api_intel_diagnostics():
+    """Unified diagnostics endpoint.
+
+    Loads strategy + intelligence state, runs the intelligence pipeline, and
+    returns a full diagnostics JSON payload covering AI signals, cycle state,
+    RL, risk, capital, execution, and governance.
+    """
+    payload = request.get_json() or {}
+    strategy_name = payload.get("strategy")
+    symbols = payload.get("symbols", [])
+    timeframe = payload.get("timeframe", app.config["BACKTEST_TIMEFRAME"])
+
+    if not strategy_name or not symbols:
+        return jsonify({"error": "strategy and symbols are required"}), 400
+
+    strategy = load_strategy(strategy_name)
+    if not strategy:
+        return jsonify({"error": "strategy not found"}), 404
+
+    # Fetch cycle state and data
+    cycle_resp = _fetch_cycle_state(symbols, timeframe)
+    cycle_state = cycle_resp.get("cycle_state", {})
+
+    # Run intelligence pipeline on the first symbol for diagnostics
+    symbol = symbols[0]
+    raw_data = alpaca.get_historical(symbol, timeframe=timeframe)
+    df = pd.DataFrame(raw_data.get("bars", []))
+    if not df.empty:
+        df["t"] = pd.to_datetime(df["t"])
+        df = _normalize_bar_columns(df)
+
+    intel_result: Dict[str, Any] = {}
+    if not df.empty:
+        intel_result = intelligence_layer.run(
+            strategy_module=strategy,
+            data=df,
+            symbol=symbol,
+            strategy_name=strategy_name,
+            cycle_state=cycle_state,
+            capital=app.config["DEFAULT_CAPITAL"],
+        )
+
+    # Execution diagnostics
+    signals = intel_result.get("signals", [])
+    exec_diag = execution_intelligence.diagnostics(signals, cycle_state=cycle_state)
+
+    # Capital allocation diagnostics
+    allocation_map: Dict[str, Any] = {}
+
+    # Governance diagnostics
+    gov_snap = strategy_governance.diagnostics([strategy_name])
+
+    # Portfolio risk (placeholder – no price history available here)
+    port_risk_diag: Dict[str, Any] = {
+        "dynamic_leverage": portfolio_risk_engine.dynamic_leverage(pd.Series(dtype=float), cycle_state),
+        "target_vol": portfolio_risk_engine.target_vol,
+        "max_portfolio_drawdown": portfolio_risk_engine.max_portfolio_drawdown,
+    }
+
+    diag = diagnostics_layer.build(
+        intelligence_result=intel_result,
+        cycle_state=intel_result.get("cycle_state", cycle_state),
+        cycle_params=intel_result.get("cycle_params"),
+        rl_signal=intel_result.get("rl_signal"),
+        portfolio_risk=port_risk_diag,
+        allocation_map=allocation_map,
+        execution_info=exec_diag,
+        governance_snapshot=gov_snap,
+    )
+
+    return jsonify(diag)
+
 
 if __name__ == "__main__":
     app.run(debug=True, host="0.0.0.0", port=5000)

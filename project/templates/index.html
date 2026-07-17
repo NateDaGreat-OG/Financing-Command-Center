@@ -37,6 +37,14 @@
             <button id="liveBtn" class="btn btn-outline-secondary">Run Live (Paper)</button>
             <button id="trainRlBtn" class="btn btn-success">Train RL Agent</button>
           </div>
+          <hr class="my-3"/>
+          <p class="text-muted small mb-2">AI Intelligence Layer</p>
+          <div class="d-grid gap-2">
+            <button id="intelBacktestBtn" class="btn btn-primary">Intelligence Backtest</button>
+            <button id="intelOptimizeBtn" class="btn btn-warning">Intelligence Optimize</button>
+            <button id="intelLiveBtn" class="btn btn-outline-primary">Intelligence Live</button>
+            <button id="intelDiagnosticsBtn" class="btn btn-outline-info">Show Diagnostics</button>
+          </div>
         </div>
       </div>
       <div class="col-12 col-lg-8">
@@ -77,6 +85,61 @@
           <h2>Live RL</h2>
           <div id="rlRunResults">Run a trained RL agent in paper trading mode.</div>
         </div>
+
+        <!-- ============================================================
+             AI INTELLIGENCE LAYER PANELS
+             ============================================================ -->
+
+        <div class="card p-4 mb-4" id="intelligencePanel">
+          <h2>Intelligence Panel</h2>
+          <p class="text-muted small">AI-enriched signal scores, cycle-adjusted parameters, and RL blending results.</p>
+          <div id="intelligenceResults">Run Intelligence Backtest or Diagnostics to populate this panel.</div>
+        </div>
+
+        <div class="card p-4 mb-4" id="cyclePanel">
+          <h2>Cycle Panel</h2>
+          <p class="text-muted small">Current market regime: trend, volatility, liquidity, macro, intraday, sector rotation.</p>
+          <div id="cycleResults">No cycle data yet.</div>
+        </div>
+
+        <div class="card p-4 mb-4" id="rlPanel">
+          <h2>RL Panel</h2>
+          <p class="text-muted small">RL agent signal, action, confidence, and blending outcome.</p>
+          <div id="rlIntelResults">No RL intelligence data yet.</div>
+        </div>
+
+        <div class="card p-4 mb-4" id="riskPanel">
+          <h2>Risk Panel</h2>
+          <p class="text-muted small">Portfolio beta, volatility targeting, drawdown, and leverage.</p>
+          <div id="riskResults">No risk data yet.</div>
+        </div>
+
+        <div class="card p-4 mb-4" id="capitalPanel">
+          <h2>Capital Panel</h2>
+          <p class="text-muted small">Per-strategy and per-symbol capital allocation summary.</p>
+          <div id="capitalIntelResults">No capital intelligence data yet.</div>
+        </div>
+
+        <div class="card p-4 mb-4" id="executionPanel">
+          <h2>Execution Panel</h2>
+          <p class="text-muted small">VWAP/TWAP scheduling, slippage estimates, and RL execution window.</p>
+          <div id="executionResults">No execution data yet.</div>
+        </div>
+
+        <div class="card p-4 mb-4" id="governancePanel">
+          <h2>Governance Panel</h2>
+          <p class="text-muted small">Strategy health: decay detection, anomaly flags, and auto-disable state.</p>
+          <div id="governanceResults">No governance data yet.</div>
+        </div>
+
+        <div class="card p-4 mb-4" id="diagnosticsPanel">
+          <h2>Diagnostics Panel</h2>
+          <p class="text-muted small">Unified JSON diagnostics output from all AI subsystems.</p>
+          <div id="diagnosticsResults">No diagnostics yet.</div>
+        </div>
+
+        <!-- ============================================================ -->
+
         <div class="card p-4 mb-4">
           <h2>Recent Signals</h2>
           <div id="signalsResults">No signals yet</div>
