@@ -17,9 +17,6 @@ try:
     from .backtest.backtester import Backtester
     from .core.risk_manager import RiskManager
     from .core.trade_logger import TradeLogger
-    from .rl.trading_env import TradingEnv
-    from .rl.dqn_agent import DQNAgent
-    from .rl.rl_utils import save_model, load_model
     _CONFIG_OBJECT = "project.config"
 except ImportError:
     from services.alpaca_client import AlpacaClient
@@ -33,6 +30,13 @@ except ImportError:
     from backtest.backtester import Backtester
     from core.risk_manager import RiskManager
     from core.trade_logger import TradeLogger
+    _CONFIG_OBJECT = "config"
+
+try:
+    from .rl.trading_env import TradingEnv
+    from .rl.dqn_agent import DQNAgent
+    from .rl.rl_utils import save_model, load_model
+except ImportError:
     try:
         from project.rl.trading_env import TradingEnv
         from project.rl.dqn_agent import DQNAgent
@@ -41,7 +45,6 @@ except ImportError:
         from rl.trading_env import TradingEnv
         from rl.dqn_agent import DQNAgent
         from rl.rl_utils import save_model, load_model
-    _CONFIG_OBJECT = "config"
 
 # Only allow symbols that look like real tickers (e.g. AAPL, BRK.B, SPY, GM).
 # Length 1: single alphanum. Length 2-20: starts + ends with alphanum, dots allowed for
