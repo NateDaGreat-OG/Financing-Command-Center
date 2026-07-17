@@ -15,9 +15,9 @@ from core.cycle_analyzer import CycleAnalyzer
 from backtest.backtester import Backtester
 from core.risk_manager import RiskManager
 from core.trade_logger import TradeLogger
-from rl.trading_env import TradingEnv
-from rl.dqn_agent import DQNAgent
-from rl.rl_utils import save_model, load_model
+from project.rl.trading_env import TradingEnv
+from project.rl.dqn_agent import DQNAgent
+from project.rl.rl_utils import save_model, load_model
 
 app = Flask(__name__, template_folder="templates", static_folder="static")
 app.config.from_object("config")
