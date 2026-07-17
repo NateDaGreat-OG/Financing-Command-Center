@@ -18,3 +18,42 @@ body {
 #tradeLogResults {
   min-height: 150px;
 }
+
+.rl-log {
+  max-height: 200px;
+  overflow-y: auto;
+  font-family: monospace;
+  font-size: 0.8rem;
+  background: #1e2329;
+  color: #adbac7;
+  padding: 0.75rem;
+  border-radius: 4px;
+}
+
+.rl-log .log-row {
+  display: flex;
+  gap: 1rem;
+  border-bottom: 1px solid #2d333b;
+  padding: 2px 0;
+}
+
+.rl-log .log-row:last-child {
+  border-bottom: none;
+}
+
+.rl-log .log-ep {
+  color: #79c0ff;
+  min-width: 4rem;
+}
+
+.rl-log .log-reward {
+  color: #56d364;
+}
+
+.rl-log .log-loss {
+  color: #f78166;
+}
+
+.rl-log .log-eps {
+  color: #e3b341;
+}

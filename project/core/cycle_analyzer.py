@@ -10,7 +10,10 @@ from typing import Any, Dict, List, Optional
 
 import numpy as np
 import pandas as pd
-from services.massive_client import MassiveClient
+try:
+    from ..services.massive_client import MassiveClient
+except ImportError:
+    from services.massive_client import MassiveClient
 
 
 class CycleAnalyzer:
@@ -139,7 +142,7 @@ class CycleAnalyzer:
         tr2 = (high - close.shift()).abs()
         tr3 = (low - close.shift()).abs()
         tr = pd.concat([tr1, tr2, tr3], axis=1).max(axis=1)
-        return tr.rolling(period).mean().fillna(method="bfill")
+        return tr.rolling(period).mean().bfill()
 
     def _vwap(self, df: pd.DataFrame) -> Optional[pd.Series]:
         if "volume" not in df.columns or df["volume"].sum() <= 0:

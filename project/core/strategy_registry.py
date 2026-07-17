@@ -15,8 +15,14 @@ def list_strategies_for_style(style: str):
     return STRATEGY_MAP.get(style)
 
 def load_strategy(name: str):
-    try:
-        module = importlib.import_module(f"strategies.{name}")
-        return module
-    except ImportError:
-        return None
+    module_names = []
+    if __package__:
+        module_names.append(f"{__package__.rsplit('.', 1)[0]}.strategies.{name}")
+    module_names.append(f"strategies.{name}")
+
+    for module_name in module_names:
+        try:
+            return importlib.import_module(module_name)
+        except ImportError:
+            continue
+    return None

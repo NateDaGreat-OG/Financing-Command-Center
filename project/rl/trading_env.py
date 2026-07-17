@@ -45,7 +45,7 @@ class TradingEnv:
         data["bb_std"] = data["close"].rolling(20).std().fillna(0.0)
         data["bb_upper"] = data["bb_mid"] + 2.0 * data["bb_std"]
         data["bb_lower"] = data["bb_mid"] - 2.0 * data["bb_std"]
-        data = data.fillna(method="bfill").fillna(method="ffill").replace([np.inf, -np.inf], 0.0)
+        data = data.bfill().ffill().replace([np.inf, -np.inf], 0.0)
         self.data = data.reset_index(drop=True)
 
     def _build_normalization(self) -> None:

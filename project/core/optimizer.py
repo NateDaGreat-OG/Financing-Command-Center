@@ -1,12 +1,18 @@
 """Hyperparameter optimization utilities for strategy tuning."""
 import itertools
+import importlib
 import random
 from typing import Any, Dict, List
-from backtest.backtester import Backtester
-from core.risk_manager import RiskManager
-from core.trade_logger import TradeLogger
-from services.alpaca_client import AlpacaClient
-from services.massive_client import MassiveClient
+try:
+    from ..backtest.backtester import Backtester
+    from .risk_manager import RiskManager
+    from .trade_logger import TradeLogger
+    from ..services.alpaca_client import AlpacaClient
+except ImportError:
+    from backtest.backtester import Backtester
+    from core.risk_manager import RiskManager
+    from core.trade_logger import TradeLogger
+    from services.alpaca_client import AlpacaClient
 
 
 def _objective_score(metrics: Dict[str, Any], objective: str) -> float:
@@ -99,7 +105,17 @@ def run_bayesian_optimization(strategy_module, search_space: Dict[str, List[Any]
 
 
 def optimize_strategy(strategy_name: str, symbols: list, objective: str, search_space: dict, config: dict, logger: TradeLogger, alpaca_client: AlpacaClient) -> dict:
-    strategy_module = __import__(f"strategies.{strategy_name}", fromlist=["*"])
+    strategy_module = None
+    module_names = []
+    if __package__:
+        module_names.append(f"{__package__.rsplit('.', 1)[0]}.strategies.{strategy_name}")
+    module_names.append(f"strategies.{strategy_name}")
+    for module_name in module_names:
+        try:
+            strategy_module = importlib.import_module(module_name)
+            break
+        except ImportError:
+            continue
     if not strategy_module:
         return {"error": "strategy not found"}
 
