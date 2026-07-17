@@ -125,7 +125,7 @@ def api_rl_train():
     data = data.rename(columns={"t": "timestamp", "o": "open", "h": "high", "l": "low", "c": "close", "v": "volume"}).set_index("timestamp")
 
     env = TradingEnv(data=data, capital=app.config["DEFAULT_CAPITAL"])
-    agent = DQNAgent(state_dim=14, action_dim=3)
+    agent = DQNAgent(state_dim=17, action_dim=3)
     agent.train(env, episodes=episodes)
     model_path = os.path.join("instance", "rl_models", f"dqn_{symbol}.pkl")
     agent.save_model(model_path)
@@ -147,7 +147,7 @@ def api_rl_run():
     if not os.path.exists(model_path):
         return jsonify({"error": "model not found"}), 404
 
-    agent = DQNAgent(state_dim=14, action_dim=3)
+    agent = DQNAgent(state_dim=17, action_dim=3)
     agent.load_model(model_path)
 
     raw_data = alpaca.get_intraday(symbol, interval=app.config["LIVE_INTERVAL"])
