@@ -5,54 +5,45 @@ import numpy as np
 import pandas as pd
 from flask import Flask, render_template, request, jsonify
 from typing import Any, Dict, List, Optional
-<<<<<<< HEAD
-from services.alpaca_client import AlpacaClient
-from services.massive_client import MassiveClient
-from services.cycle_data_client import CycleDataClient
-from core.strategy_registry import list_styles, list_strategies_for_style, load_strategy, create_intelligence_layer
-from core.optimizer import optimize_strategy, run_grid_search, run_random_search, run_bayesian_optimization
-from core.search_spaces import DEFAULT_SEARCH_SPACES
-from core.capital_manager import CapitalManager
-from core.cycle_analyzer import CycleAnalyzer
-from core.diagnostics_layer import DiagnosticsLayer
-from core.portfolio_risk_engine import PortfolioRiskEngine
-from core.execution_intelligence import ExecutionIntelligence
-from core.strategy_governance import StrategyGovernance
-from backtest.backtester import Backtester
-from core.risk_manager import RiskManager
-from core.trade_logger import TradeLogger
-from services.backtester_intel_adapter import BacktesterIntelAdapter
-from services.optimizer_intel_adapter import OptimizerIntelAdapter
-from services.live_trading_orchestrator import LiveTradingOrchestrator
-from project.rl.trading_env import TradingEnv
-from project.rl.dqn_agent import DQNAgent
-from project.rl.rl_utils import save_model, load_model
-=======
 try:
     from .services.alpaca_client import AlpacaClient
     from .services.massive_client import MassiveClient
     from .services.cycle_data_client import CycleDataClient
-    from .core.strategy_registry import list_styles, list_strategies_for_style, load_strategy
+    from .core.strategy_registry import list_styles, list_strategies_for_style, load_strategy, create_intelligence_layer
     from .core.optimizer import optimize_strategy, run_grid_search, run_random_search, run_bayesian_optimization
     from .core.search_spaces import DEFAULT_SEARCH_SPACES
     from .core.capital_manager import CapitalManager
     from .core.cycle_analyzer import CycleAnalyzer
+    from .core.diagnostics_layer import DiagnosticsLayer
+    from .core.portfolio_risk_engine import PortfolioRiskEngine
+    from .core.execution_intelligence import ExecutionIntelligence
+    from .core.strategy_governance import StrategyGovernance
     from .backtest.backtester import Backtester
     from .core.risk_manager import RiskManager
     from .core.trade_logger import TradeLogger
+    from .services.backtester_intel_adapter import BacktesterIntelAdapter
+    from .services.optimizer_intel_adapter import OptimizerIntelAdapter
+    from .services.live_trading_orchestrator import LiveTradingOrchestrator
     _CONFIG_OBJECT = "project.config"
 except ImportError:
     from services.alpaca_client import AlpacaClient
     from services.massive_client import MassiveClient
     from services.cycle_data_client import CycleDataClient
-    from core.strategy_registry import list_styles, list_strategies_for_style, load_strategy
+    from core.strategy_registry import list_styles, list_strategies_for_style, load_strategy, create_intelligence_layer
     from core.optimizer import optimize_strategy, run_grid_search, run_random_search, run_bayesian_optimization
     from core.search_spaces import DEFAULT_SEARCH_SPACES
     from core.capital_manager import CapitalManager
     from core.cycle_analyzer import CycleAnalyzer
+    from core.diagnostics_layer import DiagnosticsLayer
+    from core.portfolio_risk_engine import PortfolioRiskEngine
+    from core.execution_intelligence import ExecutionIntelligence
+    from core.strategy_governance import StrategyGovernance
     from backtest.backtester import Backtester
     from core.risk_manager import RiskManager
     from core.trade_logger import TradeLogger
+    from services.backtester_intel_adapter import BacktesterIntelAdapter
+    from services.optimizer_intel_adapter import OptimizerIntelAdapter
+    from services.live_trading_orchestrator import LiveTradingOrchestrator
     _CONFIG_OBJECT = "config"
 
 try:
@@ -68,7 +59,6 @@ except ImportError:
         from rl.trading_env import TradingEnv
         from rl.dqn_agent import DQNAgent
         from rl.rl_utils import save_model, load_model
->>>>>>> origin/main
 
 # Only allow symbols that look like real tickers (e.g. AAPL, BRK.B, SPY, GM).
 # Length 1: single alphanum. Length 2-20: starts + ends with alphanum, dots allowed for
