@@ -8,7 +8,10 @@ from __future__ import annotations
 from typing import Any, Dict, List, Optional
 
 import numpy as np
-from core.risk_manager import RiskManager
+try:
+    from .risk_manager import RiskManager
+except ImportError:
+    from core.risk_manager import RiskManager
 
 
 class CapitalManager:

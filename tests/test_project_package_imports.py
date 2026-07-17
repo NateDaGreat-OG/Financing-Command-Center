@@ -18,3 +18,4 @@ def test_project_app_imports_from_repo_root():
     )
 
     assert result.returncode == 0, result.stderr
+    assert result.stdout.strip() == "project.app"
