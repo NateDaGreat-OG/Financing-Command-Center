@@ -260,6 +260,8 @@ def _derive_rl_metrics(data: pd.DataFrame) -> Dict[str, Any]:
     df = data.copy()
     if df.empty:
         return {"average_reward": 0.0, "stability": 0.5}
+    # Alpaca returns single-letter column names (o, h, l, c, v); normalise them.
+    df = df.rename(columns={"o": "open", "h": "high", "l": "low", "c": "close", "v": "volume"})
     df["atr"] = (df["high"] - df["low"]).rolling(14).mean().ffill()
     avg_atr = float(df["atr"].iloc[-1])
     volatility = float(df["atr"].std())
