@@ -3,7 +3,20 @@
 This strategy ranks stocks based on quality and value, using fundamentals from massive.com.
 """
 
-from typing import List
+from typing import Any, Dict, List
+
+# Module-level parameters — overridable via set_params() by the intelligence layer.
+_PARAMS: Dict[str, Any] = {
+    "min_score": 0.50,
+    "stop_pct": 0.08,
+    "target_pct": 0.15,
+    "size": 20,
+}
+
+
+def set_params(params: Dict[str, Any]) -> None:
+    """Update module-level strategy parameters (used by CycleAdapter)."""
+    _PARAMS.update(params)
 
 
 def scan_candidates(symbols: List[str]):
@@ -15,13 +28,17 @@ def generate_signals(data):
     if not data:
         return signals
 
+    min_score = float(_PARAMS["min_score"])
+    stop_pct = float(_PARAMS["stop_pct"])
+    target_pct = float(_PARAMS["target_pct"])
+    size = int(_PARAMS["size"])
+
     for symbol, fundamentals in data.items():
         score = _score_company(fundamentals)
-        if score > 0.5:
+        if score > min_score:
             entry_price = fundamentals.get("price", 0)
-            stop_loss = entry_price * 0.92
-            target = entry_price * 1.15
-            size = 20
+            stop_loss = entry_price * (1 - stop_pct)
+            target = entry_price * (1 + target_pct)
             signals.append({
                 "symbol": symbol,
                 "side": "long",
@@ -30,7 +47,7 @@ def generate_signals(data):
                 "target": target,
                 "size": size,
                 "signal_type": "magic_formula",
-"ranking": score,
+                "ranking": score,
             })
 
     return signals

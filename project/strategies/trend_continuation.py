@@ -4,7 +4,22 @@ This strategy uses EMA crossovers, RSI, ATR, and volume confirmation to buy pull
 """
 
 import pandas as pd
-from typing import List
+from typing import Any, Dict, List
+
+# Module-level parameters — overridable via set_params() by the intelligence layer.
+_PARAMS: Dict[str, Any] = {
+    "ema_short": 9,
+    "ema_long": 20,
+    "rsi_low": 40,
+    "rsi_high": 70,
+    "atr_mult": 2.0,
+    "size": 50,
+}
+
+
+def set_params(params: Dict[str, Any]) -> None:
+    """Update module-level strategy parameters (used by CycleAdapter)."""
+    _PARAMS.update(params)
 
 
 def scan_candidates(symbols: List[str]):
@@ -16,24 +31,30 @@ def generate_signals(data):
     if data.empty or len(data) < 30:
         return signals
 
+    ema_short = int(_PARAMS["ema_short"])
+    ema_long = int(_PARAMS["ema_long"])
+    rsi_low = float(_PARAMS["rsi_low"])
+    rsi_high = float(_PARAMS["rsi_high"])
+    atr_mult = float(_PARAMS["atr_mult"])
+    size = int(_PARAMS["size"])
+
     df = data.copy()
-    df["ema9"] = df["close"].ewm(span=9, adjust=False).mean()
-    df["ema20"] = df["close"].ewm(span=20, adjust=False).mean()
+    df["ema_s"] = df["close"].ewm(span=ema_short, adjust=False).mean()
+    df["ema_l"] = df["close"].ewm(span=ema_long, adjust=False).mean()
     df["atr"] = (df["high"] - df["low"]).rolling(14).mean()
     df["rsi"] = _rsi(df["close"], 14)
     df["vol_avg"] = df["volume"].rolling(20).mean()
 
     latest = df.iloc[-1]
-    is_uptrend = latest["ema9"] > latest["ema20"]
-    pullback = latest["close"] < latest["ema9"]
+    is_uptrend = latest["ema_s"] > latest["ema_l"]
+    pullback = latest["close"] < latest["ema_s"]
     strong_volume = latest["volume"] > latest["vol_avg"]
-    rsi_ok = 40 < latest["rsi"] < 70
+    rsi_ok = rsi_low < latest["rsi"] < rsi_high
 
     if is_uptrend and pullback and strong_volume and rsi_ok:
         entry_price = latest["close"]
-        stop_loss = latest["ema20"]
-        target = entry_price + latest["atr"] * 2
-        size = 50
+        stop_loss = latest["ema_l"]
+        target = entry_price + latest["atr"] * atr_mult
         signals.append({
             "side": "long",
             "entry_price": entry_price,
