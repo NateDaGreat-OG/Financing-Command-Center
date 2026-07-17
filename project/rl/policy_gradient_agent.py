@@ -3,8 +3,12 @@
 This implementation is optional and contains a basic policy gradient structure.
 """
 import numpy as np
-from rl.agent_base import AgentBase
-from rl.rl_utils import save_model, load_model
+try:
+    from .agent_base import AgentBase
+    from .rl_utils import save_model, load_model
+except ImportError:
+    from rl.agent_base import AgentBase
+    from rl.rl_utils import save_model, load_model
 
 class PolicyGradientAgent(AgentBase):
     def __init__(self, state_dim: int, action_dim: int, learning_rate: float = 0.01):

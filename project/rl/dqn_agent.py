@@ -10,8 +10,12 @@ import numpy as np
 import torch
 import torch.nn as nn
 import torch.optim as optim
-from rl.agent_base import AgentBase
-from rl.rl_utils import ReplayBuffer
+try:
+    from .agent_base import AgentBase
+    from .rl_utils import ReplayBuffer
+except ImportError:
+    from rl.agent_base import AgentBase
+    from rl.rl_utils import ReplayBuffer
 
 logger = logging.getLogger(__name__)
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")

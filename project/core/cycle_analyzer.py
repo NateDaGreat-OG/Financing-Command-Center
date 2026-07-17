@@ -10,7 +10,10 @@ from typing import Any, Dict, List, Optional
 
 import numpy as np
 import pandas as pd
-from services.massive_client import MassiveClient
+try:
+    from ..services.massive_client import MassiveClient
+except ImportError:
+    from services.massive_client import MassiveClient
 
 
 class CycleAnalyzer:
