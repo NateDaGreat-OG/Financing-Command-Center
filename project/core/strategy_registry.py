@@ -21,6 +21,8 @@ def list_strategies_for_style(style: str):
 def load_strategy(name: str):
     module_names = []
     if __package__:
+        # rsplit('.', 1)[0] strips the last component (e.g. 'project.core' → 'project').
+        # For a single-segment package (no dot) it safely returns the whole string.
         module_names.append(f"{__package__.rsplit('.', 1)[0]}.strategies.{name}")
     module_names.append(f"strategies.{name}")
 
