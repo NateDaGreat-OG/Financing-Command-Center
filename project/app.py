@@ -1,4 +1,5 @@
 import os
+import re
 import json
 import numpy as np
 import pandas as pd
@@ -18,6 +19,19 @@ from core.trade_logger import TradeLogger
 from project.rl.trading_env import TradingEnv
 from project.rl.dqn_agent import DQNAgent
 from project.rl.rl_utils import save_model, load_model
+
+# Only allow symbols that look like real tickers (e.g. AAPL, BRK.B, SPY).
+_SYMBOL_RE = re.compile(r'^[A-Za-z0-9.\-]{1,20}$')
+
+
+def _validate_symbol(symbol: str) -> bool:
+    """Return True only when the symbol contains safe, ticker-like characters."""
+    return bool(symbol and _SYMBOL_RE.match(symbol))
+
+
+def _normalize_bar_columns(df: pd.DataFrame) -> pd.DataFrame:
+    """Rename Alpaca's single-letter bar columns to human-readable names."""
+    return df.rename(columns={"t": "timestamp", "o": "open", "h": "high", "l": "low", "c": "close", "v": "volume"})
 
 app = Flask(__name__, template_folder="templates", static_folder="static")
 app.config.from_object("config")
@@ -257,11 +271,9 @@ def api_capital_allocate():
 
 
 def _derive_rl_metrics(data: pd.DataFrame) -> Dict[str, Any]:
-    df = data.copy()
+    df = _normalize_bar_columns(data.copy())
     if df.empty:
         return {"average_reward": 0.0, "stability": 0.5}
-    # Alpaca returns single-letter column names (o, h, l, c, v); normalise them.
-    df = df.rename(columns={"o": "open", "h": "high", "l": "low", "c": "close", "v": "volume"})
     df["atr"] = (df["high"] - df["low"]).rolling(14).mean().ffill()
     avg_atr = float(df["atr"].iloc[-1])
     volatility = float(df["atr"].std())
@@ -288,14 +300,15 @@ def api_rl_train():
     os.makedirs(_RL_MODEL_DIR, exist_ok=True)
     results: Dict[str, Any] = {}
     for symbol in symbols:
+        if not _validate_symbol(symbol):
+            results[symbol] = {"error": "invalid symbol"}
+            continue
         raw_data = alpaca.get_historical(symbol, timeframe=timeframe)
         df = pd.DataFrame(raw_data.get("bars", []))
         if df.empty:
             results[symbol] = {"error": "no data available"}
             continue
-        df = df.rename(
-            columns={"t": "timestamp", "o": "open", "h": "high", "l": "low", "c": "close", "v": "volume"}
-        )
+        df = _normalize_bar_columns(df)
         df["timestamp"] = pd.to_datetime(df["timestamp"])
         df = df.set_index("timestamp")
         env = TradingEnv(data=df, capital=app.config["DEFAULT_CAPITAL"])
@@ -331,6 +344,8 @@ def api_rl_models():
 
 @app.route("/api/rl/models/<symbol>", methods=["DELETE"])
 def api_rl_model_delete(symbol: str):
+    if not _validate_symbol(symbol):
+        return jsonify({"error": "invalid symbol"}), 400
     model_path = os.path.join(_RL_MODEL_DIR, f"dqn_{symbol}.pth")
     if not os.path.exists(model_path):
         return jsonify({"error": "model not found"}), 404
@@ -348,6 +363,8 @@ def api_rl_run():
         return jsonify({"error": "Only dqn agent is supported currently"}), 400
     if not symbol:
         return jsonify({"error": "symbol is required"}), 400
+    if not _validate_symbol(symbol):
+        return jsonify({"error": "invalid symbol"}), 400
 
     model_path = os.path.join(_RL_MODEL_DIR, f"dqn_{symbol}.pth")
     if not os.path.exists(model_path):
@@ -357,9 +374,9 @@ def api_rl_run():
     agent.load_model(model_path)
 
     raw_data = alpaca.get_intraday(symbol, interval=app.config["LIVE_INTERVAL"])
-    data = pd.DataFrame(raw_data.get("bars", []))
-    data["t"] = pd.to_datetime(data["t"])
-    data = data.rename(columns={"t": "timestamp", "o": "open", "h": "high", "l": "low", "c": "close", "v": "volume"}).set_index("timestamp")
+    data = _normalize_bar_columns(pd.DataFrame(raw_data.get("bars", [])))
+    data["timestamp"] = pd.to_datetime(data["timestamp"])
+    data = data.set_index("timestamp")
 
     env = TradingEnv(data=data, capital=app.config["DEFAULT_CAPITAL"])
     state = env.reset()

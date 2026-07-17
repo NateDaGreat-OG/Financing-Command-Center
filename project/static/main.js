@@ -23,6 +23,16 @@ const tradeLogResults = document.getElementById("tradeLogResults");
 
 let rewardChart = null;
 
+/** Escape user/API content before inserting into innerHTML. */
+function escapeHtml(str) {
+  return String(str)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
 async function fetchStyles() {
   const response = await fetch("/api/styles");
   const styles = await response.json();
@@ -135,10 +145,12 @@ function renderRewardChart(symbolResults) {
   const palette = ["#1f78ff", "#56d364", "#f78166", "#e3b341", "#79c0ff", "#d2a8ff"];
   let idx = 0;
   for (const [symbol, result] of Object.entries(symbolResults)) {
-    if (!result.history) continue;
+    if (!Array.isArray(result.history) || !result.history.length) continue;
     datasets.push({
-      label: symbol,
-      data: result.history.map(h => ({x: h.episode, y: parseFloat(h.reward.toFixed(4))})),
+      label: escapeHtml(symbol),
+      data: result.history
+        .filter(h => h && typeof h.episode === "number" && typeof h.reward === "number")
+        .map(h => ({x: h.episode, y: parseFloat(h.reward.toFixed(4))})),
       borderColor: palette[idx % palette.length],
       backgroundColor: "transparent",
       tension: 0.3,
@@ -174,14 +186,15 @@ function renderRewardChart(symbolResults) {
 function renderTrainingLog(symbolResults) {
   const rows = [];
   for (const [symbol, result] of Object.entries(symbolResults)) {
-    if (!result.history) continue;
+    if (!Array.isArray(result.history) || !result.history.length) continue;
     for (const h of result.history) {
+      if (!h || typeof h.episode !== "number") continue;
       rows.push(`
         <div class="log-row">
-          <span class="log-ep">${symbol} ep ${h.episode}</span>
-          <span class="log-reward">r=${h.reward.toFixed(3)}</span>
-          <span class="log-loss">loss=${h.avg_loss.toFixed(4)}</span>
-          <span class="log-eps">ε=${h.epsilon.toFixed(3)}</span>
+          <span class="log-ep">${escapeHtml(symbol)} ep ${h.episode}</span>
+          <span class="log-reward">r=${Number(h.reward).toFixed(3)}</span>
+          <span class="log-loss">loss=${Number(h.avg_loss).toFixed(4)}</span>
+          <span class="log-eps">ε=${Number(h.epsilon).toFixed(3)}</span>
         </div>`);
     }
   }
@@ -200,7 +213,8 @@ async function trainRLAgent() {
     return;
   }
 
-  rlTrainingResults.innerHTML = `<div class="text-muted">Training DQN agent for ${symbols.join(", ")} over ${episodes} episodes…</div>`;
+  const safeSymbols = symbols.map(escapeHtml).join(", ");
+  rlTrainingResults.innerHTML = `<div class="text-muted">Training DQN agent for ${safeSymbols} over ${episodes} episodes…</div>`;
   rlRewardChartWrap.style.display = "none";
   rlTrainingLog.style.display = "none";
 
@@ -218,11 +232,12 @@ async function trainRLAgent() {
 
   // Summary
   const summaryRows = Object.entries(data).map(([sym, res]) => {
-    if (res.error) return `<tr><td>${sym}</td><td colspan="3" class="text-danger">${res.error}</td></tr>`;
+    const safeSym = escapeHtml(sym);
+    if (res.error) return `<tr><td>${safeSym}</td><td colspan="3" class="text-danger">${escapeHtml(res.error)}</td></tr>`;
     return `<tr>
-      <td>${sym}</td>
-      <td>${res.episodes_trained}</td>
-      <td>${res.best_reward !== undefined ? res.best_reward.toFixed(4) : "—"}</td>
+      <td>${safeSym}</td>
+      <td>${escapeHtml(String(res.episodes_trained))}</td>
+      <td>${res.best_reward !== undefined ? Number(res.best_reward).toFixed(4) : "—"}</td>
       <td><span class="badge bg-success">Saved</span></td>
     </tr>`;
   }).join("");
@@ -256,11 +271,11 @@ async function fetchRLModels() {
     const kb = (m.size_bytes / 1024).toFixed(1);
     const modified = new Date(m.modified * 1000).toLocaleString();
     return `<tr>
-      <td>${sym}</td>
-      <td>${kb} KB</td>
-      <td>${modified}</td>
+      <td>${escapeHtml(sym)}</td>
+      <td>${escapeHtml(kb)} KB</td>
+      <td>${escapeHtml(modified)}</td>
       <td>
-        <button class="btn btn-sm btn-outline-danger" onclick="deleteRLModel('${sym}')">Delete</button>
+        <button class="btn btn-sm btn-outline-danger rl-model-delete" data-symbol="${escapeHtml(sym)}">Delete</button>
       </td>
     </tr>`;
   }).join("");
@@ -274,7 +289,7 @@ async function fetchRLModels() {
 
 async function deleteRLModel(symbol) {
   if (!confirm(`Delete RL model for ${symbol}?`)) return;
-  const response = await fetch(`/api/rl/models/${symbol}`, {method: "DELETE"});
+  const response = await fetch(`/api/rl/models/${encodeURIComponent(symbol)}`, {method: "DELETE"});
   if (!response.ok) {
     const data = await response.json();
     alert(data.error || "Delete failed");
@@ -389,6 +404,14 @@ runAllocationBtn.addEventListener("click", runCapitalAllocation);
 runCycleAnalysisBtn.addEventListener("click", runCycleAnalysis);
 trainRlBtn.addEventListener("click", trainRLAgent);
 liveBtn.addEventListener("click", runLive);
+
+// Event delegation for dynamically rendered model-registry delete buttons.
+rlModelRegistry.addEventListener("click", event => {
+  const btn = event.target.closest(".rl-model-delete");
+  if (btn) {
+    deleteRLModel(btn.dataset.symbol);
+  }
+});
 
 fetchStyles();
 fetchRLModels();
