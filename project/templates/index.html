@@ -28,6 +28,8 @@
           <div class="d-grid gap-2">
             <button id="backtestBtn" class="btn btn-primary">Run Backtest</button>
             <button id="optimizeBtn" class="btn btn-warning">Optimize Strategy</button>
+            <button id="runAllocationBtn" class="btn btn-info">Run Capital Allocation</button>
+            <button id="runCycleAnalysisBtn" class="btn btn-secondary">Analyze Market Cycles</button>
             <button id="liveBtn" class="btn btn-outline-secondary">Run Live (Paper)</button>
             <button id="trainRlBtn" class="btn btn-success">Train RL Agent</button>
           </div>
@@ -41,6 +43,14 @@
         <div class="card p-4 mb-4">
           <h2>Optimization</h2>
           <div id="optimizeResults">Run optimization to tune strategy hyperparameters.</div>
+        </div>
+        <div class="card p-4 mb-4">
+          <h2>Capital Allocation</h2>
+          <div id="capitalAllocationResults">Allocate capital across strategies and symbols.</div>
+        </div>
+        <div class="card p-4 mb-4">
+          <h2>Cycle Analysis</h2>
+          <div id="cycleAnalysisResults">Analyze market cycles and regime state.</div>
         </div>
         <div class="card p-4 mb-4">
           <h2>RL Training</h2>

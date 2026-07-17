@@ -3,10 +3,14 @@ const strategySelect = document.getElementById("strategySelect");
 const symbolsInput = document.getElementById("symbolsInput");
 const backtestBtn = document.getElementById("backtestBtn");
 const optimizeBtn = document.getElementById("optimizeBtn");
+const runAllocationBtn = document.getElementById("runAllocationBtn");
+const runCycleAnalysisBtn = document.getElementById("runCycleAnalysisBtn");
 const liveBtn = document.getElementById("liveBtn");
 const trainRlBtn = document.getElementById("trainRlBtn");
 const backtestResults = document.getElementById("backtestResults");
 const optimizeResults = document.getElementById("optimizeResults");
+const capitalAllocationResults = document.getElementById("capitalAllocationResults");
+const cycleAnalysisResults = document.getElementById("cycleAnalysisResults");
 const rlTrainingResults = document.getElementById("rlTrainingResults");
 const rlRunResults = document.getElementById("rlRunResults");
 const signalsResults = document.getElementById("signalsResults");
@@ -162,6 +166,59 @@ async function runRLAgent() {
   rlRunResults.innerHTML = `<pre>${JSON.stringify(data, null, 2)}</pre>`;
 }
 
+async function runCycleAnalysis() {
+  const symbols = symbolsInput.value.split(",").map(s => s.trim()).filter(Boolean);
+  if (!symbols.length) {
+    alert("Please provide symbols for cycle analysis.");
+    return;
+  }
+
+  cycleAnalysisResults.innerHTML = "Analyzing market cycles...";
+  const response = await fetch("/api/cycles/analyze", {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({symbols, timeframe: "1D"}),
+  });
+  const data = await response.json();
+  if (!response.ok) {
+    cycleAnalysisResults.innerHTML = `<div class="text-danger">${data.error || "Cycle analysis failed"}</div>`;
+    return;
+  }
+
+  cycleAnalysisResults.innerHTML = `
+    <div><strong>Aggregate Regime:</strong> ${JSON.stringify(data.cycle_state, null, 2)}</div>
+    <div><strong>Symbol States:</strong> <pre>${JSON.stringify(data.symbol_states, null, 2)}</pre></div>
+  `;
+}
+
+async function runCapitalAllocation() {
+  const strategies = [strategySelect.value].filter(Boolean);
+  const symbols = symbolsInput.value.split(",").map(s => s.trim()).filter(Boolean);
+  if (!strategies.length || !symbols.length) {
+    alert("Please select a strategy and provide symbols for capital allocation.");
+    return;
+  }
+
+  capitalAllocationResults.innerHTML = "Allocating capital...";
+  const response = await fetch("/api/capital/allocate", {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({strategies, symbols, timeframe: "1D"}),
+  });
+
+  const data = await response.json();
+  if (!response.ok) {
+    capitalAllocationResults.innerHTML = `<div class="text-danger">${data.error || "Capital allocation failed"}</div>`;
+    return;
+  }
+
+  capitalAllocationResults.innerHTML = `
+    <div><strong>Allocation Map:</strong></div>
+    <pre>${JSON.stringify(data.allocation, null, 2)}</pre>
+    <div><strong>Cycle:</strong> ${JSON.stringify(data.cycle_state, null, 2)}</div>
+  `;
+}
+
 async function runLive() {
   const strategy = strategySelect.value;
   const symbols = symbolsInput.value.split(",").map(s => s.trim()).filter(Boolean);
@@ -189,6 +246,8 @@ async function runLive() {
 styleSelect.addEventListener("change", event => fetchStrategies(event.target.value));
 backtestBtn.addEventListener("click", runBacktest);
 optimizeBtn.addEventListener("click", runOptimization);
+runAllocationBtn.addEventListener("click", runCapitalAllocation);
+runCycleAnalysisBtn.addEventListener("click", runCycleAnalysis);
 trainRlBtn.addEventListener("click", trainRLAgent);
 liveBtn.addEventListener("click", runLive);
 

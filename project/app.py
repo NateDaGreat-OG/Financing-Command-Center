@@ -1,12 +1,17 @@
 import os
 import json
+import numpy as np
 import pandas as pd
 from flask import Flask, render_template, request, jsonify
+from typing import Any, Dict, List, Optional
 from services.alpaca_client import AlpacaClient
 from services.massive_client import MassiveClient
+from services.cycle_data_client import CycleDataClient
 from core.strategy_registry import list_styles, list_strategies_for_style, load_strategy
 from core.optimizer import optimize_strategy, run_grid_search, run_random_search, run_bayesian_optimization
 from core.search_spaces import DEFAULT_SEARCH_SPACES
+from core.capital_manager import CapitalManager
+from core.cycle_analyzer import CycleAnalyzer
 from backtest.backtester import Backtester
 from core.risk_manager import RiskManager
 from core.trade_logger import TradeLogger
@@ -25,6 +30,16 @@ alpaca = AlpacaClient(
 
 massive = MassiveClient(api_key=app.config["MASSIVE_API_KEY"], base_url=app.config["MASSIVE_BASE_URL"])
 logger = TradeLogger(log_dir=app.config["LOG_DIR"])
+
+cycle_client = None
+if app.config.get("CYCLE_DATA_API_KEY") and app.config.get("CYCLE_DATA_BASE_URL"):
+    cycle_client = CycleDataClient(
+        api_key=app.config["CYCLE_DATA_API_KEY"],
+        base_url=app.config["CYCLE_DATA_BASE_URL"],
+    )
+
+cycle_analyzer = CycleAnalyzer(macro_client=massive, config=app.config)
+capital_manager = CapitalManager(config=app.config, risk_manager=RiskManager(app.config))
 
 @app.route("/")
 def index():
@@ -105,32 +120,152 @@ def api_optimize():
 
     return jsonify(result)
 
-@app.route("/api/rl/train", methods=["POST"])
-def api_rl_train():
+@app.route("/api/cycles/analyze", methods=["POST"])
+def api_cycles_analyze():
     payload = request.get_json() or {}
-    agent_type = payload.get("agent")
     symbols = payload.get("symbols", [])
-    episodes = int(payload.get("episodes", 50))
     timeframe = payload.get("timeframe", app.config["BACKTEST_TIMEFRAME"])
 
-    if agent_type != "dqn":
-        return jsonify({"error": "Only dqn agent is supported currently"}), 400
     if not symbols:
         return jsonify({"error": "symbols are required"}), 400
 
-    symbol = symbols[0]
-    raw_data = alpaca.get_historical(symbol, timeframe=timeframe)
-    data = pd.DataFrame(raw_data.get("bars", []))
-    data["t"] = pd.to_datetime(data["t"])
-    data = data.rename(columns={"t": "timestamp", "o": "open", "h": "high", "l": "low", "c": "close", "v": "volume"}).set_index("timestamp")
+    aggregated_cycle: Dict[str, Any] = {
+        "trend": "sideways",
+        "volatility": "low",
+        "liquidity": "expanding",
+        "macro": "risk_on",
+        "intraday": "chop",
+        "sector_rotation": {},
+    }
+    cycle_states = {}
+    for symbol in symbols:
+        raw_data = alpaca.get_historical(symbol, timeframe=timeframe)
+        data = pd.DataFrame(raw_data.get("bars", []))
+        if data.empty:
+            continue
+        data["t"] = pd.to_datetime(data["t"])
+        data = data.rename(columns={"t": "timestamp", "o": "open", "h": "high", "l": "low", "c": "close", "v": "volume"})
+        cycle_state = cycle_analyzer.analyze(data, symbol=symbol)
+        cycle_states[symbol] = cycle_state
 
-    env = TradingEnv(data=data, capital=app.config["DEFAULT_CAPITAL"])
-    agent = DQNAgent(state_dim=17, action_dim=3)
-    agent.train(env, episodes=episodes)
-    model_path = os.path.join("instance", "rl_models", f"dqn_{symbol}.pkl")
-    agent.save_model(model_path)
+    if cycle_states:
+        aggregated_cycle = _aggregate_cycle_states(cycle_states)
 
-    return jsonify({"status": "trained", "symbol": symbol, "episodes": episodes, "model_path": model_path})
+    return jsonify({"cycle_state": aggregated_cycle, "symbol_states": cycle_states})
+
+
+def _fetch_cycle_state(symbols: List[str], timeframe: str) -> Dict[str, Any]:
+    cycle_states: Dict[str, Any] = {}
+    for symbol in symbols:
+        raw_data = alpaca.get_historical(symbol, timeframe=timeframe)
+        data = pd.DataFrame(raw_data.get("bars", []))
+        if data.empty:
+            continue
+        data["t"] = pd.to_datetime(data["t"])
+        data = data.rename(columns={"t": "timestamp", "o": "open", "h": "high", "l": "low", "c": "close", "v": "volume"})
+        cycle_states[symbol] = cycle_analyzer.analyze(data, symbol=symbol)
+
+    aggregated_cycle = _aggregate_cycle_states(cycle_states) if cycle_states else {
+        "trend": "sideways",
+        "volatility": "low",
+        "liquidity": "expanding",
+        "macro": "risk_on",
+        "intraday": "chop",
+        "sector_rotation": {},
+    }
+    return {"cycle_state": aggregated_cycle, "symbol_states": cycle_states}
+
+
+def _aggregate_cycle_states(cycle_states: Dict[str, Dict[str, Any]]) -> Dict[str, Any]:
+    trends = [state.get("trend", "sideways") for state in cycle_states.values()]
+    volatility = [state.get("volatility", "low") for state in cycle_states.values()]
+    liquidity = [state.get("liquidity", "expanding") for state in cycle_states.values()]
+    macros = [state.get("macro", "risk_on") for state in cycle_states.values()]
+    intraday = [state.get("intraday", "chop") for state in cycle_states.values()]
+
+    def majority(values):
+        if not values:
+            return values
+        return max(set(values), key=values.count)
+
+    return {
+        "trend": majority(trends),
+        "volatility": majority(volatility),
+        "liquidity": majority(liquidity),
+        "macro": majority(macros),
+        "intraday": majority(intraday),
+        "sector_rotation": {"symbols": list(cycle_states.keys())},
+    }
+
+
+@app.route("/api/capital/allocate", methods=["POST"])
+def api_capital_allocate():
+    payload = request.get_json() or {}
+    strategies = payload.get("strategies", [])
+    symbols = payload.get("symbols", [])
+    timeframe = payload.get("timeframe", app.config["BACKTEST_TIMEFRAME"])
+
+    if not strategies or not symbols:
+        return jsonify({"error": "strategies and symbols are required"}), 400
+
+    cycle_state = {}
+    if payload.get("cycle_state"):
+        cycle_state = payload.get("cycle_state")
+    else:
+        cycle_resp = _fetch_cycle_state(symbols, timeframe)
+        cycle_state = cycle_resp.get("cycle_state", {})
+
+    strategy_metrics = {}
+    for strategy_name in strategies:
+        strategy_module = load_strategy(strategy_name)
+        if not strategy_module:
+            strategy_metrics[strategy_name] = {"sharpe": 0.0, "max_drawdown": 0.0, "win_rate": 0.0}
+            continue
+        historical_data = {}
+        for symbol in symbols:
+            raw_data = alpaca.get_historical(symbol, timeframe=timeframe)
+            historical_data[symbol] = raw_data
+        backtester = Backtester(
+            strategy_module=strategy_module,
+            capital=app.config["DEFAULT_CAPITAL"],
+            slippage=app.config.get("DEFAULT_SLIPPAGE", 0.0005),
+            commission=app.config.get("DEFAULT_COMMISSION", 0.001),
+            risk_manager=RiskManager(app.config),
+            logger=logger,
+        )
+        results = backtester.run(historical_data)
+        strategy_metrics[strategy_name] = results.get("metrics", {})
+
+    rl_metrics = {}
+    for symbol in symbols:
+        raw_data = alpaca.get_historical(symbol, timeframe=timeframe)
+        df = pd.DataFrame(raw_data.get("bars", []))
+        if not df.empty:
+            rl_metrics[symbol] = _derive_rl_metrics(df)
+        else:
+            rl_metrics[symbol] = {"average_reward": 0.0, "stability": 0.5}
+
+    allocation_map = capital_manager.allocate(
+        strategies=strategies,
+        symbols=symbols,
+        strategy_metrics=strategy_metrics,
+        rl_metrics=rl_metrics,
+        cycle_state=cycle_state,
+    )
+
+    return jsonify({"allocation": allocation_map, "strategy_metrics": strategy_metrics, "rl_metrics": rl_metrics, "cycle_state": cycle_state})
+
+
+def _derive_rl_metrics(data: pd.DataFrame) -> Dict[str, Any]:
+    df = data.copy()
+    if df.empty:
+        return {"average_reward": 0.0, "stability": 0.5}
+    df["atr"] = (df["high"] - df["low"]).rolling(14).mean().ffill()
+    avg_atr = float(df["atr"].iloc[-1])
+    volatility = float(df["atr"].std())
+    average_reward = float(np.tanh(avg_atr / max(df["close"].iloc[-1], 1.0)))
+    stability = float(1.0 / (1.0 + volatility))
+    return {"average_reward": average_reward, "stability": float(np.clip(stability, 0.1, 1.0))}
 
 @app.route("/api/rl/run", methods=["POST"])
 def api_rl_run():
