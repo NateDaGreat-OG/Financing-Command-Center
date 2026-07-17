@@ -275,7 +275,7 @@ async function fetchRLModels() {
       <td>${escapeHtml(kb)} KB</td>
       <td>${escapeHtml(modified)}</td>
       <td>
-        <button class="btn btn-sm btn-outline-danger rl-model-delete" data-symbol="${sym}">Delete</button>
+        <button class="btn btn-sm btn-outline-danger rl-model-delete" data-symbol="${escapeHtml(sym)}">Delete</button>
       </td>
     </tr>`;
   }).join("");

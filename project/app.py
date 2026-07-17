@@ -20,8 +20,9 @@ from project.rl.trading_env import TradingEnv
 from project.rl.dqn_agent import DQNAgent
 from project.rl.rl_utils import save_model, load_model
 
-# Only allow symbols that look like real tickers (e.g. AAPL, BRK.B, SPY).
-# Must start and end with alphanumeric; dots allowed for share classes (BRK.B).
+# Only allow symbols that look like real tickers (e.g. AAPL, BRK.B, SPY, GM).
+# Length 1: single alphanum. Length 2-20: starts + ends with alphanum, dots allowed for
+# share classes like BRK.B. Middle group {0,18} means 2-char symbols (GM, FB) are valid.
 _SYMBOL_RE = re.compile(r'^[A-Za-z0-9]([A-Za-z0-9.]{0,18}[A-Za-z0-9])?$')
 
 
@@ -298,7 +299,7 @@ def _safe_model_path(symbol: str) -> Optional[str]:
     and the containment check prevents writes/reads outside ``_RL_MODEL_DIR``.
     """
     candidate = os.path.realpath(os.path.abspath(os.path.join(_RL_MODEL_DIR, f"dqn_{symbol}.pth")))
-    if candidate != _RL_MODEL_DIR_ABS and not candidate.startswith(_RL_MODEL_DIR_ABS + os.sep):
+    if not candidate.startswith(_RL_MODEL_DIR_ABS + os.sep):
         return None
     return candidate
 
