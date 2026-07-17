@@ -458,21 +458,22 @@ async function runIntelligenceBacktest() {
   }
 
   const m = data.metrics || {};
+  const fmt = v => (typeof v === "number") ? v.toFixed(2) : escapeHtml(String(v ?? "–"));
   intelligenceResults.innerHTML = `
     <div class="row">
-      <div class="col-4"><strong>Sharpe (ann.):</strong> ${escapeHtml(String(m.annualized_sharpe ?? m.sharpe ?? "–"))}</div>
-      <div class="col-4"><strong>Sortino:</strong> ${escapeHtml(String(m.sortino ?? "–"))}</div>
-      <div class="col-4"><strong>Profit Factor:</strong> ${escapeHtml(String(m.profit_factor ?? "–"))}</div>
+      <div class="col-4"><strong>Sharpe (ann.):</strong> ${fmt(m.annualized_sharpe ?? m.sharpe)}</div>
+      <div class="col-4"><strong>Sortino:</strong> ${fmt(m.sortino)}</div>
+      <div class="col-4"><strong>Profit Factor:</strong> ${fmt(m.profit_factor)}</div>
     </div>
     <div class="row mt-2">
-      <div class="col-4"><strong>Expectancy:</strong> ${escapeHtml(String(m.expectancy ?? "–"))}</div>
-      <div class="col-4"><strong>Max Drawdown:</strong> ${escapeHtml(String(m.max_drawdown ?? "–"))}</div>
-      <div class="col-4"><strong>Win Rate:</strong> ${escapeHtml(String(m.win_rate ?? "–"))}%</div>
+      <div class="col-4"><strong>Expectancy:</strong> ${fmt(m.expectancy)}</div>
+      <div class="col-4"><strong>Max Drawdown:</strong> ${fmt(m.max_drawdown)}</div>
+      <div class="col-4"><strong>Win Rate:</strong> ${fmt(m.win_rate)}%</div>
     </div>
     <div class="row mt-2">
-      <div class="col-4"><strong>CAGR:</strong> ${escapeHtml(String(m.cagr ?? "–"))}%</div>
+      <div class="col-4"><strong>CAGR:</strong> ${fmt(m.cagr)}%</div>
       <div class="col-4"><strong>Trades:</strong> ${escapeHtml(String(m.trade_count ?? "–"))}</div>
-      <div class="col-4"><strong>Final Equity:</strong> $${escapeHtml(String(m.final_equity ?? "–"))}</div>
+      <div class="col-4"><strong>Final Equity:</strong> $${fmt(m.final_equity)}</div>
     </div>`;
 
   if (data.intelligence_diagnostics) {

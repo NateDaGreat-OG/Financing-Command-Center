@@ -272,7 +272,7 @@ class LiveTradingOrchestrator:
         try:
             resp = self.alpaca.submit_order(
                 symbol=symbol,
-                qty=size,
+                qty=int(size),
                 side=alpaca_side,
                 type="market",
                 time_in_force="day",

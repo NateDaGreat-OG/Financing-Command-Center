@@ -254,7 +254,7 @@ class StrategyGovernance:
         tightened = []
         for sig in signals:
             t = sig.copy()
-            t["size"] = round(float(t.get("size", 0.0)) * size_mult, 4)
+            t["size"] = max(int(float(t.get("size", 0)) * size_mult), 0)
             entry = float(t.get("entry_price", 0.0))
             stop = float(t.get("stop_loss", entry))
             dist = abs(entry - stop) * stop_mult
