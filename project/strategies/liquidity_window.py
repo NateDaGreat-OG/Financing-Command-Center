@@ -58,6 +58,8 @@ def execute_signals(signals):
 
 def _build_signal(side: str, row, size: int):
     entry_price = row["close"]
+    # For long signals entry > vwap (stop below entry).
+    # For short signals entry < vwap (stop above entry, since vwap > close when shorting).
     stop_loss = row["vwap"]
     target = entry_price + (entry_price - stop_loss) * 1.2 if side == "long" else entry_price - (stop_loss - entry_price) * 1.2
     return {
