@@ -147,7 +147,7 @@ function renderRewardChart(symbolResults) {
   for (const [symbol, result] of Object.entries(symbolResults)) {
     if (!Array.isArray(result.history) || !result.history.length) continue;
     datasets.push({
-      label: escapeHtml(symbol),
+      label: symbol,  // Chart.js handles its own escaping for display
       data: result.history
         .filter(h => h && typeof h.episode === "number" && typeof h.reward === "number")
         .map(h => ({x: h.episode, y: parseFloat(h.reward.toFixed(4))})),
@@ -275,7 +275,7 @@ async function fetchRLModels() {
       <td>${escapeHtml(kb)} KB</td>
       <td>${escapeHtml(modified)}</td>
       <td>
-        <button class="btn btn-sm btn-outline-danger rl-model-delete" data-symbol="${escapeHtml(sym)}">Delete</button>
+        <button class="btn btn-sm btn-outline-danger rl-model-delete" data-symbol="${sym}">Delete</button>
       </td>
     </tr>`;
   }).join("");

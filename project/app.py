@@ -21,8 +21,8 @@ from project.rl.dqn_agent import DQNAgent
 from project.rl.rl_utils import save_model, load_model
 
 # Only allow symbols that look like real tickers (e.g. AAPL, BRK.B, SPY).
-# Must start and end with alphanumeric; optionally separated by a single dot or hyphen.
-_SYMBOL_RE = re.compile(r'^[A-Za-z0-9]([A-Za-z0-9.\-]{0,18}[A-Za-z0-9])?$')
+# Must start and end with alphanumeric; dots allowed for share classes (BRK.B).
+_SYMBOL_RE = re.compile(r'^[A-Za-z0-9]([A-Za-z0-9.]{0,18}[A-Za-z0-9])?$')
 
 
 def _validate_symbol(symbol: str) -> bool:
@@ -298,7 +298,7 @@ def _safe_model_path(symbol: str) -> Optional[str]:
     and the containment check prevents writes/reads outside ``_RL_MODEL_DIR``.
     """
     candidate = os.path.realpath(os.path.abspath(os.path.join(_RL_MODEL_DIR, f"dqn_{symbol}.pth")))
-    if not candidate.startswith(_RL_MODEL_DIR_ABS + os.sep):
+    if candidate != _RL_MODEL_DIR_ABS and not candidate.startswith(_RL_MODEL_DIR_ABS + os.sep):
         return None
     return candidate
 
