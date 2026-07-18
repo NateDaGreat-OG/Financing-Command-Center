@@ -1,9 +1,10 @@
 import requests
 import project.config as Config
 
-def load_historical_data(symbol, start, end, multiplier=1, timespan="day"):
+def load_historical_data(symbol, start, end, multiplier=1, timespan="minute"):
     """
-    Load OHLCV bars from Massive.com using the official v2 aggs endpoint.
+    Load OHLCV bars from Massive.com using minute aggregates.
+    This works on the Massive Stocks Basic plan.
     """
 
     url = (
@@ -11,26 +12,25 @@ def load_historical_data(symbol, start, end, multiplier=1, timespan="day"):
         f"{symbol}/range/{multiplier}/{timespan}/{start}/{end}"
     )
 
-    params = {
-        "apiKey": Config.MASSIVE_API_KEY  # MUST be apiKey (case-sensitive)
+    headers = {
+        "Authorization": f"Bearer {Config.MASSIVE_API_KEY}"
     }
 
-    response = requests.get(url, params=params)
+    response = requests.get(url, headers=headers)
     response.raise_for_status()
     data = response.json()
 
-    # Massive returns bars under "results"
     bars = data.get("results", [])
 
     normalized = []
     for b in bars:
         normalized.append({
-            "t": b.get("t"),          # timestamp
-            "o": b.get("o"),          # open
-            "h": b.get("h"),          # high
-            "l": b.get("l"),          # low
-            "c": b.get("c"),          # close
-            "v": b.get("v"),          # volume
+            "t": b.get("t"),
+            "o": b.get("o"),
+            "h": b.get("h"),
+            "l": b.get("l"),
+            "c": b.get("c"),
+            "v": b.get("v"),
         })
 
     return normalized
