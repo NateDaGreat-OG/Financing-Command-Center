@@ -4,7 +4,7 @@ import json
 
 import project.config as Config
 from project.services.backtester_intel_adapter import BacktesterIntelAdapter
-from project.data.massive_loader import load_historical_data
+from project.data.massive_daily_loader import load_daily_bars as load_historical_data
 
 # Folder containing all strategy modules
 STRATEGY_FOLDER = "project/strategies"
