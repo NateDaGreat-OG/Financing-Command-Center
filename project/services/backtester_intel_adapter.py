@@ -14,6 +14,7 @@ expectancy, max drawdown, and equity/drawdown curves.
 """
 from __future__ import annotations
 
+from cProfile import run
 import logging
 from datetime import datetime
 from typing import Any, Dict, List, Optional
@@ -76,7 +77,13 @@ class BacktesterIntelAdapter:
         self.intelligence = intelligence or create_intelligence_layer(config=config)
         self.trade_logger = logger or TradeLogger(log_dir=config.get("LOG_DIR", "logs"))
         self.diagnostics = DiagnosticsLayer(config=config)
-
+    @staticmethod
+    
+    def safe_list(x):
+        if hasattr(x, "tolist"):
+            return x.tolist()
+        return list(x)
+    
     # ------------------------------------------------------------------
     # Main entry point
     # ------------------------------------------------------------------
@@ -199,12 +206,13 @@ class BacktesterIntelAdapter:
         result = {
             "metrics": metrics,
             "trade_log": trade_log,
-            "equity_curve": eq_arr.round(2).tolist(),
-            "drawdown_curve": dd_curve.round(4).tolist(),
+            "equity_curve": eq_arr.round(2).tolist() if hasattr(eq_arr, "tolist") else list(eq_arr),
+            "drawdown_curve": dd_curve.round(4).tolist() if hasattr(dd_curve, "tolist") else list(dd_curve),
             "trade_distribution": {
-                "counts": hist.tolist() if len(hist) else [],
+                "counts": hist.tolist() if isinstance(hist, np.ndarray) else list(hist),
                 "edges": [round(float(e), 4) for e in edges] if len(edges) else [],
             },
+
             "intelligence_diagnostics": diag,
         }
         self.trade_logger.log_backtest(result)
