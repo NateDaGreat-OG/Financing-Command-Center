@@ -1,12 +1,10 @@
 import os
 import importlib
 import json
+
 import project.config as Config
 from project.services.backtester_intel_adapter import BacktesterIntelAdapter
-from project.data.massive_loader import load_historical_data   # adjust if your loader is elsewhere
-
-api_key = Config.MASSIVE_API_KEY
-base_url = Config.MASSIVE_BASE_URL
+from project.data.massive_loader import load_historical_data
 
 # Folder containing all strategy modules
 STRATEGY_FOLDER = "project/strategies"
@@ -27,14 +25,14 @@ def get_strategy_names():
     ]
 
 
-def run_backtest_for_strategy(strategy_name):
-    """Run a backtest for a single strategy across ALL tickers."""
+def run_backtest_for_strategy(strategy_name: str):
+    """Run a backtest for a single strategy across all tickers."""
     print(f"\n=== Running Backtest for {strategy_name} ===")
 
     # Load strategy module dynamically
     strategy_module = importlib.import_module(f"project.strategies.{strategy_name}")
 
-    # Load config module and convert to dict (adapter requires dict)
+    # Wrap config module into a dict for the adapter
     config = {
         "LOG_DIR": Config.LOG_DIR,
         "DEFAULT_CAPITAL": Config.DEFAULT_CAPITAL,
@@ -42,29 +40,35 @@ def run_backtest_for_strategy(strategy_name):
         "DEFAULT_COMMISSION": Config.DEFAULT_COMMISSION,
         "MASSIVE_API_KEY": Config.MASSIVE_API_KEY,
         "MASSIVE_BASE_URL": Config.MASSIVE_BASE_URL,
-        "BACKTEST_TIMEFRAME": Config.BACKTEST_TIMEFRAME,}
-
-
+        "BACKTEST_TIMEFRAME": Config.BACKTEST_TIMEFRAME,
+        "MAX_RISK_PER_TRADE": Config.MAX_RISK_PER_TRADE,
+        "MAX_CONCURRENT_POSITIONS": Config.MAX_CONCURRENT_POSITIONS,
+        "MAX_PORTFOLIO_DRAWDOWN": Config.MAX_PORTFOLIO_DRAWDOWN,
+        "MAX_STRATEGY_DRAWDOWN": Config.MAX_STRATEGY_DRAWDOWN,
+        "MAX_SYMBOL_EXPOSURE": Config.MAX_SYMBOL_EXPOSURE,
+        "MIN_ALLOCATION_PCT": Config.MIN_ALLOCATION_PCT,
+        "MAX_POSITION_SIZE_PCT": Config.MAX_POSITION_SIZE_PCT,
+    }
 
     # Create adapter
     adapter = BacktesterIntelAdapter(strategy_module, config)
 
-    # Load historical data for ALL tickers
+    # Load historical data for all tickers from Massive
     historical_data = {
         symbol: load_historical_data(symbol, START_DATE, END_DATE)
         for symbol in TICKERS
     }
 
-    # Run backtest using correct adapter signature
+    # Run backtest
     results = adapter.run(
         historical_data=historical_data,
-        strategy_name=strategy_name
+        strategy_name=strategy_name,
     )
 
     # Print summary
-    print("Metrics:", results["metrics"])
-    print("Trades:", results["trade_log"][:5])
-    print("Equity Curve (first 10):", results["equity_curve"][:10])
+    print("Metrics:", results.get("metrics"))
+    print("Trades:", results.get("trade_log", [])[:5])
+    print("Equity Curve (first 10):", results.get("equity_curve", [])[:10])
 
     # Save results for dashboard
     os.makedirs("backtest_results", exist_ok=True)
