@@ -1,9 +1,14 @@
 from flask import Blueprint, render_template
-from financial_command_center.models import Strategy
+from project.core.strategy_registry import list_styles, list_strategies_for_style
 
 dashboard_bp = Blueprint("dashboard", __name__)
 
 @dashboard_bp.route("/")
 def dashboard():
-    strategies = Strategy.query.order_by(Strategy.name).all()
+    styles = list_styles() or []
+
+    strategies = []
+    for style in styles:
+        strategies.extend(list_strategies_for_style(style) or [])
+
     return render_template("dashboard.html", strategies=strategies)
