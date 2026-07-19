@@ -1,5 +1,4 @@
 # Financing-Command-Center
 Portfolio Trading Strategy Tracking 
 
-Wire real Alpaca/Massive API keys
-Replace placeholder signal sizing and execution logic with actual trading rules before live use
+when massive client upgraded change massive loader import and historical data time length. 
