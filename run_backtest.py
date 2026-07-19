@@ -4,14 +4,14 @@ import json
 
 import project.config as Config
 from project.services.backtester_intel_adapter import BacktesterIntelAdapter
-from project.data.massive_recent_loader import load_recent_daily_bars as load_historical_data
+from project.data.massive_recent_loader import load_daily_bars_5call as load_historical_data
 
 # Folder containing all strategy modules
 STRATEGY_FOLDER = "project/strategies"
 
 # Backtest parameters
 TICKERS = ["AAPL", "MSFT", "TSLA", "NVDA", "AMZN"]
-DAYS_BACK = 7  # Number of days of historical data to load for backtesting
+DAYS_BACK = 5  # Number of days of historical data to load for backtesting
 
 
 def get_strategy_names():

@@ -2,10 +2,10 @@ import requests
 import project.config as Config
 from datetime import datetime, timedelta
 
-def load_recent_daily_bars(symbol, days_back=7):
+def load_daily_bars_5call(symbols, days_back=5):
     """
-    Load daily OHLCV bars for the last N days.
-    Works on Massive Basic because it only requests recent data.
+    Load daily OHLCV bars for multiple symbols using the grouped endpoint.
+    Limited to 5 API calls per day (Massive Basic limit).
     """
 
     headers = {
@@ -15,12 +15,16 @@ def load_recent_daily_bars(symbol, days_back=7):
     today = datetime.utcnow().date()
     start_date = today - timedelta(days=days_back)
 
-    all_bars = []
+    # Output structure: { "AAPL": [...], "MSFT": [...], ... }
+    all_data = {s: [] for s in symbols}
 
     current = start_date
-    while current <= today:
+    calls_used = 0
+
+    while current <= today and calls_used < 5:
         date_str = current.strftime("%Y-%m-%d")
-        url = f"{Config.MASSIVE_BASE_URL}/v1/open-close/{symbol}/{date_str}"
+
+        url = f"{Config.MASSIVE_BASE_URL}/v2/aggs/grouped/locale/us/market/stocks/{date_str}"
 
         response = requests.get(url, headers=headers)
 
@@ -29,24 +33,30 @@ def load_recent_daily_bars(symbol, days_back=7):
             current += timedelta(days=1)
             continue
 
-        # If forbidden, skip (Basic plan sometimes blocks older days)
+        # Forbidden → skip
         if response.status_code == 403:
             current += timedelta(days=1)
             continue
 
         response.raise_for_status()
+        calls_used += 1
+
         data = response.json()
+        results = data.get("results", [])
 
-        bar = {
-            "t": date_str,
-            "o": data.get("open"),
-            "h": data.get("high"),
-            "l": data.get("low"),
-            "c": data.get("close"),
-            "v": data.get("volume"),
-        }
+        # Filter only the tickers we care about
+        for bar in results:
+            ticker = bar.get("T")
+            if ticker in symbols:
+                all_data[ticker].append({
+                    "t": date_str,
+                    "o": bar.get("o"),
+                    "h": bar.get("h"),
+                    "l": bar.get("l"),
+                    "c": bar.get("c"),
+                    "v": bar.get("v"),
+                })
 
-        all_bars.append(bar)
         current += timedelta(days=1)
 
-    return all_bars
+    return all_data
