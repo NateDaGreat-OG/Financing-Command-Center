@@ -5,7 +5,7 @@ import json
 import project.config as Config
 from project.services.backtester_intel_adapter import BacktesterIntelAdapter
 
-from project.data.massive_today_loader import load_today_daily_bars
+from project.data.massive_today_minutes import load_today_minute_bars
 
 STRATEGY_FOLDER = "project/strategies"
 TICKERS = ["AAPL", "MSFT", "TSLA", "NVDA", "AMZN"]
@@ -44,8 +44,8 @@ def run_backtest_for_strategy(strategy_name: str):
 
     adapter = BacktesterIntelAdapter(strategy_module, config)
 
-    # Load today's data (1 API call)
-    historical_data = load_today_daily_bars(TICKERS)
+    # Load today's minute bars
+    historical_data = load_today_minute_bars(TICKERS)
 
     results = adapter.run(
         historical_data=historical_data,
