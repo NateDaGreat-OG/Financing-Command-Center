@@ -4,7 +4,7 @@ import json
 
 import project.config as Config
 from project.services.backtester_intel_adapter import BacktesterIntelAdapter
-from project.data.massive_daily_loader import load_daily_bars as load_historical_data
+from project.data.massive_recent_loader import load_recent_daily_bars as load_historical_data
 
 # Folder containing all strategy modules
 STRATEGY_FOLDER = "project/strategies"
@@ -55,7 +55,7 @@ def run_backtest_for_strategy(strategy_name: str):
 
     # Load historical data for all tickers from Massive
     historical_data = {
-        symbol: load_historical_data(symbol, START_DATE, END_DATE)
+        symbol: load_historical_data(symbol, days_back=7)
         for symbol in TICKERS
     }
 
