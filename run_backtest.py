@@ -11,8 +11,7 @@ STRATEGY_FOLDER = "project/strategies"
 
 # Backtest parameters
 TICKERS = ["AAPL", "MSFT", "TSLA", "NVDA", "AMZN"]
-START_DATE = "2023-01-01"
-END_DATE = "2024-01-01"
+DAYS_BACK = 7  # Number of days of historical data to load for backtesting
 
 
 def get_strategy_names():
@@ -55,7 +54,7 @@ def run_backtest_for_strategy(strategy_name: str):
 
     # Load historical data for all tickers from Massive
     historical_data = {
-        symbol: load_historical_data(symbol, days_back=7)
+        symbol: load_historical_data(symbol, days_back=DAYS_BACK)
         for symbol in TICKERS
     }
 
