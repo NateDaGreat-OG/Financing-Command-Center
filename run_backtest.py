@@ -5,12 +5,10 @@ import json
 import project.config as Config
 from project.services.backtester_intel_adapter import BacktesterIntelAdapter
 
-# Use 5-call loader (Massive Basic compatible)
-from project.data.massive_recent_loader import load_daily_bars_5call
+from project.data.massive_today_loader import load_today_daily_bars
 
 STRATEGY_FOLDER = "project/strategies"
 TICKERS = ["AAPL", "MSFT", "TSLA", "NVDA", "AMZN"]
-DAYS_BACK = 5   # Limited by Massive Basic plan
 
 
 def get_strategy_names():
@@ -46,8 +44,8 @@ def run_backtest_for_strategy(strategy_name: str):
 
     adapter = BacktesterIntelAdapter(strategy_module, config)
 
-    # Load recent daily data for all tickers in 5 API calls
-    historical_data = load_daily_bars_5call(TICKERS, days_back=DAYS_BACK)
+    # Load today's data (1 API call)
+    historical_data = load_today_daily_bars(TICKERS)
 
     results = adapter.run(
         historical_data=historical_data,
