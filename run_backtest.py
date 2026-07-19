@@ -6,7 +6,7 @@ import project.config as Config
 from project.services.backtester_intel_adapter import BacktesterIntelAdapter
 
 # Use 5-call loader (Massive Basic compatible)
-from project.data.massive_5call_loader import load_daily_bars_5call
+from project.data.massive_recent_loader import load_daily_bars_5call
 
 STRATEGY_FOLDER = "project/strategies"
 TICKERS = ["AAPL", "MSFT", "TSLA", "NVDA", "AMZN"]
