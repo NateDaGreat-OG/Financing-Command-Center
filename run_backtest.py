@@ -4,18 +4,16 @@ import json
 
 import project.config as Config
 from project.services.backtester_intel_adapter import BacktesterIntelAdapter
-from project.data.massive_recent_loader import load_daily_bars_5call as load_historical_data
 
-# Folder containing all strategy modules
+# Use 5-call loader (Massive Basic compatible)
+from project.data.massive_5call_loader import load_daily_bars_5call
+
 STRATEGY_FOLDER = "project/strategies"
-
-# Backtest parameters
 TICKERS = ["AAPL", "MSFT", "TSLA", "NVDA", "AMZN"]
-DAYS_BACK = 5  # Number of days of historical data to load for backtesting
+DAYS_BACK = 5   # Limited by Massive Basic plan
 
 
 def get_strategy_names():
-    """Return all strategy module names (without .py)."""
     files = os.listdir(STRATEGY_FOLDER)
     return [
         f.replace(".py", "")
@@ -25,13 +23,10 @@ def get_strategy_names():
 
 
 def run_backtest_for_strategy(strategy_name: str):
-    """Run a backtest for a single strategy across all tickers."""
     print(f"\n=== Running Backtest for {strategy_name} ===")
 
-    # Load strategy module dynamically
     strategy_module = importlib.import_module(f"project.strategies.{strategy_name}")
 
-    # Wrap config module into a dict for the adapter
     config = {
         "LOG_DIR": Config.LOG_DIR,
         "DEFAULT_CAPITAL": Config.DEFAULT_CAPITAL,
@@ -49,27 +44,20 @@ def run_backtest_for_strategy(strategy_name: str):
         "MAX_POSITION_SIZE_PCT": Config.MAX_POSITION_SIZE_PCT,
     }
 
-    # Create adapter
     adapter = BacktesterIntelAdapter(strategy_module, config)
 
-    # Load historical data for all tickers from Massive
-    historical_data = {
-        symbol: load_historical_data(symbol, days_back=DAYS_BACK)
-        for symbol in TICKERS
-    }
+    # Load recent daily data for all tickers in 5 API calls
+    historical_data = load_daily_bars_5call(TICKERS, days_back=DAYS_BACK)
 
-    # Run backtest
     results = adapter.run(
         historical_data=historical_data,
         strategy_name=strategy_name,
     )
 
-    # Print summary
     print("Metrics:", results.get("metrics"))
     print("Trades:", results.get("trade_log", [])[:5])
     print("Equity Curve (first 10):", results.get("equity_curve", [])[:10])
 
-    # Save results for dashboard
     os.makedirs("backtest_results", exist_ok=True)
     out_path = f"backtest_results/{strategy_name}.json"
 
