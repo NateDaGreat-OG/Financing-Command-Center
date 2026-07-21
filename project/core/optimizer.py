@@ -3,6 +3,8 @@ import itertools
 import importlib
 import random
 from typing import Any, Dict, List
+
+from flask_migrate import history
 try:
     from ..backtest.backtester import Backtester
     from .risk_manager import RiskManager
@@ -63,11 +65,20 @@ def run_grid_search(strategy_module, search_space: Dict[str, List[Any]], data: d
         score = _objective_score(result["metrics"], objective)
         result["score"] = score
         history.append(result)
+
         if best is None or score > best["score"]:
             best = result
 
-    return {"best_params": best["params"], "best_metrics": best["metrics"], "log": history}
+    # SAFETY CHECK AFTER LOOP
+    if best is None:
+        return {
+            "best_params": None,
+            "best_metrics": None,
+            "log": history,
+            "error": "No valid parameter combination produced metrics."
+        }
 
+    return {"best_params": best["params"], "best_metrics": best["metrics"], "log": history}
 
 def run_random_search(strategy_module, search_space: Dict[str, List[Any]], data: dict, config: dict, logger: TradeLogger, iterations: int = 10, objective: str = "max_sharpe") -> dict:
     keys = list(search_space.keys())
@@ -80,8 +91,18 @@ def run_random_search(strategy_module, search_space: Dict[str, List[Any]], data:
         score = _objective_score(result["metrics"], objective)
         result["score"] = score
         history.append(result)
+
         if best is None or score > best["score"]:
             best = result
+
+    # SAFETY CHECK AFTER LOOP
+    if best is None:
+        return {
+            "best_params": None,
+            "best_metrics": None,
+            "log": history,
+            "error": "Random search produced no valid results."
+        }
 
     return {"best_params": best["params"], "best_metrics": best["metrics"], "log": history}
 
@@ -97,9 +118,20 @@ def run_bayesian_optimization(strategy_module, search_space: Dict[str, List[Any]
         score = _objective_score(result["metrics"], objective)
         result["score"] = score
         history.append(result)
+
         if best is None or score > best["score"]:
             best = result
+
         choices.remove(params)
+
+    # SAFETY CHECK AFTER LOOP
+    if best is None:
+        return {
+            "best_params": None,
+            "best_metrics": None,
+            "log": history,
+            "error": "Bayesian optimization produced no valid results."
+        }
 
     return {"best_params": best["params"], "best_metrics": best["metrics"], "log": history}
 

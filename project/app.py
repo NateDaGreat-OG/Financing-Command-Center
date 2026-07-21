@@ -9,6 +9,8 @@ from project.data.massive_today_minutes import load_today_minute_bars
 from flask import Flask, render_template, request, jsonify
 from typing import Any, Dict, List, Optional
 from project.news.news_intel import analyze_news
+from project.events.event_aggregator import aggregate_events
+from project.events.event_filter import filter_next_3_months
 try:
     from .services.alpaca_client import AlpacaClient
     from .services.massive_client import MassiveClient
@@ -29,12 +31,13 @@ try:
     from .services.optimizer_intel_adapter import OptimizerIntelAdapter
     from .services.live_trading_orchestrator import LiveTradingOrchestrator
     _CONFIG_OBJECT = "project.config"
+
 except ImportError:
     from services.alpaca_client import AlpacaClient
     from services.massive_client import MassiveClient
     from services.cycle_data_client import CycleDataClient
     from core.strategy_registry import list_styles, list_strategies_for_style, load_strategy, create_intelligence_layer
-    from core.optimizer import optimize_strategy, run_grid_search, run_random_search, run_bayesian_optimization
+    from project.core.optimizer import run_grid_search, run_random_search, run_bayesian_optimization
     from core.search_spaces import DEFAULT_SEARCH_SPACES
     from core.capital_manager import CapitalManager
     from core.cycle_analyzer import CycleAnalyzer
@@ -734,3 +737,9 @@ def api_intel_diagnostics():
 
 if __name__ == "__main__":
     app.run(debug=True, host="0.0.0.0", port=5000)
+
+@app.route("/events")
+def events():
+    events = aggregate_events()
+    upcoming = filter_next_3_months(events)
+    return render_template("events.html", events=upcoming)

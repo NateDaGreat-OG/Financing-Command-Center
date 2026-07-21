@@ -8,5 +8,6 @@
         "./services",
         "./backtest"
     ],
-    "python.analysis.autoImportCompletions": true
+    "python.analysis.autoImportCompletions": true,
+    "python-envs.defaultEnvManager": "ms-python.python:system"
 }
