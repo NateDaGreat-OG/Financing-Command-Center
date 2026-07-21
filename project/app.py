@@ -3,10 +3,12 @@ import re
 import json
 import numpy as np
 import pandas as pd
+from project.news.news_intel import analyze_news
 from project.intel.ticker_selector import get_best_tickers
 from project.data.massive_today_minutes import load_today_minute_bars
 from flask import Flask, render_template, request, jsonify
 from typing import Any, Dict, List, Optional
+from project.news.news_intel import analyze_news
 try:
     from .services.alpaca_client import AlpacaClient
     from .services.massive_client import MassiveClient
@@ -83,28 +85,6 @@ def data_loader(symbol):
     # simple wrapper around your existing loader
     data = load_today_minute_bars([symbol])
     return data.get(symbol, [])
-
-
-@app.route("/auto_select_tickers", methods=["POST"])
-def auto_select_tickers():
-    strategy_name = request.form.get("strategy")
-    
-    if not strategy_name:
-        return jsonify({"error": "strategy is required"}), 400
-
-    # TODO: load performance history from your backtest_results
-    performance_history = {}  # { "AAPL": sharpe, ... }
-
-    best = get_best_tickers(
-        strategy_name=strategy_name,
-        universe=UNIVERSE,
-        data_loader=data_loader,
-        performance_history=performance_history,
-        top_n=3,
-    )
-
-    # Return JSON or re-render template with symbols pre-filled
-    return jsonify({"symbols": best})
 
 app = Flask(__name__, template_folder="templates", static_folder="static")
 app.config.from_object(_CONFIG_OBJECT)
@@ -353,6 +333,38 @@ def api_capital_allocate():
 
     return jsonify({"allocation": allocation_map, "strategy_metrics": strategy_metrics, "rl_metrics": rl_metrics, "cycle_state": cycle_state})
 
+@app.route("/news")
+def news_feed():
+    # Your universe of tickers
+    ticker_list = ["AAPL", "MSFT", "TSLA", "NVDA", "AMZN"]
+
+    # Load performance history (optional for RL refinement)
+    performance_history = {}  # or load from backtest_results
+
+    intel = analyze_news(ticker_list, performance_history)
+
+    return render_template("news.html", intel=intel)
+
+@app.route("/auto_select_tickers", methods=["POST"])
+def auto_select_tickers():
+    strategy_name = request.form.get("strategy")
+    
+    if not strategy_name:
+        return jsonify({"error": "strategy is required"}), 400
+
+    # TODO: load performance history from your backtest_results
+    performance_history = {}  # { "AAPL": sharpe, ... }
+
+    best = get_best_tickers(
+        strategy_name=strategy_name,
+        universe=UNIVERSE,
+        data_loader=data_loader,
+        performance_history=performance_history,
+        top_n=3,
+    )
+
+    # Return JSON or re-render template with symbols pre-filled
+    return jsonify({"symbols": best})
 
 def _derive_rl_metrics(data: pd.DataFrame) -> Dict[str, Any]:
     df = _normalize_bar_columns(data.copy())
