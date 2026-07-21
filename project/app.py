@@ -3,6 +3,8 @@ import re
 import json
 import numpy as np
 import pandas as pd
+from project.intel.ticker_selector import get_best_tickers
+from project.data.massive_today_minutes import load_today_minute_bars
 from flask import Flask, render_template, request, jsonify
 from typing import Any, Dict, List, Optional
 try:
@@ -64,7 +66,7 @@ except ImportError:
 # Length 1: single alphanum. Length 2-20: starts + ends with alphanum, dots allowed for
 # share classes like BRK.B. Middle group {0,18} means 2-char symbols (GM, FB) are valid.
 _SYMBOL_RE = re.compile(r'^[A-Za-z0-9]([A-Za-z0-9.]{0,18}[A-Za-z0-9])?$')
-
+UNIVERSE = ["AAPL", "MSFT", "TSLA", "NVDA", "AMZN", "META", "AMD", "GOOGL", "NFLX", "CRM"]
 
 def _validate_symbol(symbol: str) -> bool:
     """Return True only when the symbol contains safe, ticker-like characters."""
@@ -77,6 +79,32 @@ def _normalize_bar_columns(df: pd.DataFrame) -> pd.DataFrame:
     """Rename Alpaca's single-letter bar columns to human-readable names."""
     return df.rename(columns={"t": "timestamp", "o": "open", "h": "high", "l": "low", "c": "close", "v": "volume"})
 
+def data_loader(symbol):
+    # simple wrapper around your existing loader
+    data = load_today_minute_bars([symbol])
+    return data.get(symbol, [])
+
+
+@app.route("/auto_select_tickers", methods=["POST"])
+def auto_select_tickers():
+    strategy_name = request.form.get("strategy")
+    
+    if not strategy_name:
+        return jsonify({"error": "strategy is required"}), 400
+
+    # TODO: load performance history from your backtest_results
+    performance_history = {}  # { "AAPL": sharpe, ... }
+
+    best = get_best_tickers(
+        strategy_name=strategy_name,
+        universe=UNIVERSE,
+        data_loader=data_loader,
+        performance_history=performance_history,
+        top_n=3,
+    )
+
+    # Return JSON or re-render template with symbols pre-filled
+    return jsonify({"symbols": best})
 
 app = Flask(__name__, template_folder="templates", static_folder="static")
 app.config.from_object(_CONFIG_OBJECT)
