@@ -1,40 +1,51 @@
+/* GLOBAL BACKGROUND */
 body {
     margin: 0;
     font-family: Arial, sans-serif;
-    background: #121212;
+    background: linear-gradient(135deg, #00f2c3 0%, #00c9ff 100%);
     color: #fff;
 }
 
+/* LAYOUT */
 .layout {
     display: flex;
     height: 100vh;
 }
 
+/* LEFT SIDEBAR — GLASS EFFECT */
 .sidebar {
     width: 240px;
-    background: #1e1e1e;
     padding: 20px;
+    background: rgba(135, 206, 250, 0.25); /* sky-blue translucent */
+    backdrop-filter: blur(12px);
+    border-right: 1px solid rgba(255, 255, 255, 0.25);
+    box-shadow: 2px 0 12px rgba(0,0,0,0.15);
 }
 
-.sidebar-nav li {
-    margin: 15px 0;
-}
-
+/* SIDEBAR TEXT */
 .sidebar-nav a {
-    color: #ccc;
+    color: #eaffff;
     text-decoration: none;
     font-size: 18px;
+    font-weight: 500;
 }
 
 .sidebar-nav a:hover {
-    color: #fff;
+    color: #ffffff;
 }
 
+/* MAIN CONTENT AREA — GLASS PANEL */
 .main-content {
     flex: 1;
     padding: 20px;
+    background: rgba(255, 255, 255, 0.15); /* translucent white */
+    backdrop-filter: blur(18px);
+    border-radius: 12px;
+    margin: 20px;
+    box-shadow: 0 0 25px rgba(0,0,0,0.2);
 }
 
+/* TOP TABS */
 .top-tabs {
     display: flex;
     gap: 20px;
@@ -42,14 +53,15 @@ body {
 }
 
 .top-tabs a {
-    color: #aaa;
+    color: #eaffff;
     text-decoration: none;
     font-size: 16px;
-    padding-bottom: 5px;
+    padding-bottom: 6px;
     border-bottom: 2px solid transparent;
+    transition: 0.2s ease;
 }
 
 .top-tabs a:hover {
-    color: #fff;
-    border-bottom: 2px solid #fff;
+    color: #ffffff;
+    border-bottom: 2px solid #ffffff;
 }
