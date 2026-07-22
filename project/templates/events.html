@@ -1,14 +1,38 @@
 {% extends "base.html" %}
 
-{% block tabs %}
-<div class="top-tabs">
-    <a href="/events">Upcoming IPOs</a>
-    <a href="/events/nasdaq">NASDAQ Additions</a>
-    <a href="/events/sec">SEC Filings</a>
-</div>
-{% endblock %}
-
 {% block content %}
-<h1>Upcoming IPOs</h1>
-<!-- your IPO table -->
+<h1>IPO Calendar</h1>
+
+<h2>Massive IPOs</h2>
+{% if massive.error %}
+<p>Error: {{ massive.error }}</p>
+{% else %}
+<ul>
+{% for ipo in massive %}
+    <li>{{ ipo.company }} — {{ ipo.symbol }} — {{ ipo.listing_date }}</li>
+{% endfor %}
+</ul>
+{% endif %}
+
+<h2>Benzinga IPOs</h2>
+{% if benzinga.error %}
+<p>Error: {{ benzinga.error }}</p>
+{% else %}
+<ul>
+{% for ipo in benzinga %}
+    <li>{{ ipo.company }} — {{ ipo.symbol }} — {{ ipo.expected_date }}</li>
+{% endfor %}
+</ul>
+{% endif %}
+
+<h2>MarketBeat IPOs</h2>
+{% if marketbeat.error %}
+<p>Error: {{ marketbeat.error }}</p>
+{% else %}
+<ul>
+{% for ipo in marketbeat %}
+    <li>{{ ipo.company }} — {{ ipo.symbol }} — {{ ipo.expected_date }}</li>
+{% endfor %}
+</ul>
+{% endif %}
 {% endblock %}

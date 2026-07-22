@@ -2,6 +2,11 @@ import os
 import re
 import json
 import numpy as np
+from project.events.ipo_scraper import (
+    fetch_massive_ipos,
+    fetch_benzinga_ipos,
+    fetch_marketbeat_ipos
+)
 import pandas as pd
 from flask import Flask, render_template, request, jsonify
 from typing import Any, Dict, List, Optional
@@ -136,9 +141,16 @@ def news_home():
 
 @app.route("/events")
 def events_page():
-    events = aggregate_events()
-    upcoming = filter_next_3_months(events)
-    return render_template("events.html", events=upcoming)
+    massive_ipos = fetch_massive_ipos()
+    benzinga_ipos = fetch_benzinga_ipos()
+    marketbeat_ipos = fetch_marketbeat_ipos()
+
+    return render_template(
+        "events.html",
+        massive=massive_ipos,
+        benzinga=benzinga_ipos,
+        marketbeat=marketbeat_ipos
+    )
 
 @app.route("/ai")
 def ai_home():
