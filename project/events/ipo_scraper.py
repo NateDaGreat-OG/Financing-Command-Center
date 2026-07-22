@@ -1,9 +1,10 @@
 import requests
+import os
 from bs4 import BeautifulSoup
 from massive import RESTClient
 def fetch_massive_ipos(limit=10):
     try:
-        client = RESTClient(app.config["MASSIVE_API_KEY"])
+        client = RESTClient(os.getenv("MASSIVE_API_KEY"))
         ipos = client.vx.list_ipos(order="desc", limit=limit, sort="listing_date")
         return list(ipos)
     except Exception as e:
