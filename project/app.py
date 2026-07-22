@@ -15,7 +15,6 @@ from typing import Any, Dict, List, Optional
 from project.news.news_intel import analyze_news
 from project.intel.ticker_selector import get_best_tickers
 from project.data.massive_today_minutes import load_today_minute_bars
-from project.events.event_aggregator import aggregate_events
 from project.events.event_filter import filter_next_3_months
 
 try:

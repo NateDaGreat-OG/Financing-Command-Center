@@ -1,17 +1,28 @@
-import requests
 import os
+import requests
 from bs4 import BeautifulSoup
 from massive import RESTClient
+
+# Load Massive API key from environment
+MASSIVE_API_KEY = os.getenv("MASSIVE_API_KEY")
+
+
+# ============================================================
+#   MASSIVE IPO API
+# ============================================================
+
 def fetch_massive_ipos(limit=10):
     try:
-        client = RESTClient(os.getenv("MASSIVE_API_KEY"))
+        client = RESTClient(MASSIVE_API_KEY)
         ipos = client.vx.list_ipos(order="desc", limit=limit, sort="listing_date")
         return list(ipos)
     except Exception as e:
         return {"error": str(e)}
 
-import requests
-from bs4 import BeautifulSoup
+
+# ============================================================
+#   BENZINGA IPO SCRAPER
+# ============================================================
 
 def fetch_benzinga_ipos():
     url = "https://www.benzinga.com/money/ipos"
@@ -35,6 +46,11 @@ def fetch_benzinga_ipos():
 
     except Exception as e:
         return {"error": str(e)}
+
+
+# ============================================================
+#   MARKETBEAT IPO SCRAPER
+# ============================================================
 
 def fetch_marketbeat_ipos():
     url = "https://www.marketbeat.com/ipos/"
