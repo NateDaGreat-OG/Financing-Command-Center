@@ -234,7 +234,6 @@ def api_cycles_analyze():
 
     return jsonify({"cycle_state": aggregated_cycle, "symbol_states": cycle_states})
 
-
 def _fetch_cycle_state(symbols: List[str], timeframe: str) -> Dict[str, Any]:
     cycle_states: Dict[str, Any] = {}
     for symbol in symbols:
@@ -335,18 +334,6 @@ def api_capital_allocate():
     )
 
     return jsonify({"allocation": allocation_map, "strategy_metrics": strategy_metrics, "rl_metrics": rl_metrics, "cycle_state": cycle_state})
-
-@app.route("/news")
-def news_feed():
-    # Your universe of tickers
-    ticker_list = ["AAPL", "MSFT", "TSLA", "NVDA", "AMZN"]
-
-    # Load performance history (optional for RL refinement)
-    performance_history = {}  # or load from backtest_results
-
-    intel = analyze_news(ticker_list, performance_history)
-
-    return render_template("news.html", intel=intel)
 
 @app.route("/auto_select_tickers", methods=["POST"])
 def auto_select_tickers():
@@ -743,3 +730,19 @@ def events():
     events = aggregate_events()
     upcoming = filter_next_3_months(events)
     return render_template("events.html", events=upcoming)
+
+@app.route("/train_news_rl")
+def train_news_rl():
+    return render_template("train_news_rl.html")
+
+@app.route("/news")
+def news_feed():
+    # Your universe of tickers
+    ticker_list = ["AAPL", "MSFT", "TSLA", "NVDA", "AMZN"]
+
+    # Load performance history (optional for RL refinement)
+    performance_history = {}  # or load from backtest_results
+
+    intel = analyze_news(ticker_list, performance_history)
+
+    return render_template("news.html", intel=intel)
