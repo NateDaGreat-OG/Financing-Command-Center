@@ -10,6 +10,13 @@
 {% endblock %}
 
 {% block content %}
-<h1>Market News</h1>
-<!-- your news feed content -->
+<h1>AI Filtered News</h1>
+
+{% for item in intel %}
+<div class="news-card">
+    <h3>{{ item.title }}</h3>
+    <p>{{ item.summary }}</p>
+    <a href="{{ item.url }}" target="_blank">Read More</a>
+</div>
+{% endfor %}
 {% endblock %}

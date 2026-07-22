@@ -121,7 +121,7 @@ strategy_governance = StrategyGovernance(config=app.config)
 diagnostics_layer = DiagnosticsLayer(config=app.config)
 
 # ============================================================
-#   NEW UI ROUTES (Sidebar + Top Tabs)
+#   MAIN UI ROUTES (Sidebar Pages)
 # ============================================================
 
 @app.route("/")
@@ -133,24 +133,6 @@ def news_home():
     ticker_list = ["AAPL", "MSFT", "TSLA", "NVDA", "AMZN"]
     intel = analyze_news(ticker_list, {})
     return render_template("news.html", intel=intel)
-
-@app.route("/news/tickers")
-def news_tickers():
-    ticker_list = UNIVERSE
-    intel = analyze_news(ticker_list, {})
-    return render_template("news_tickers.html", intel=intel)
-
-@app.route("/news/ai")
-def news_ai():
-    ticker_list = UNIVERSE
-    intel = analyze_news(ticker_list, {})
-    return render_template("news_ai.html", intel=intel)
-
-@app.route("/news/sentiment")
-def news_sentiment():
-    ticker_list = UNIVERSE
-    intel = analyze_news(ticker_list, {})
-    return render_template("news_sentiment.html", intel=intel)
 
 @app.route("/events")
 def events_page():
@@ -182,20 +164,103 @@ def diagnostics_home():
 def settings_home():
     return render_template("settings.html")
 
+
+# ============================================================
+#   DASHBOARD SUB‑PAGE ROUTES
+# ============================================================
+
+@app.route("/dashboard/overview")
+def dashboard_overview():
+    return render_template("dashboard_overview.html")
+
+@app.route("/dashboard/strategies")
+def dashboard_strategies():
+    return render_template("dashboard_strategies.html")
+
+@app.route("/dashboard/combined")
+def dashboard_combined():
+    return render_template("dashboard_combined.html")
+
+@app.route("/dashboard/risk")
+def dashboard_risk():
+    return render_template("dashboard_risk.html")
+
+@app.route("/dashboard/cycles")
+def dashboard_cycles():
+    return render_template("dashboard_cycles.html")
+
+@app.route("/dashboard/rl")
+def dashboard_rl():
+    return render_template("dashboard_rl.html")
+
+
+# ============================================================
+#   NEWS SUB‑PAGE ROUTES
+# ============================================================
+
+@app.route("/news/tickers")
+def news_tickers():
+    intel = analyze_news(UNIVERSE, {})
+    return render_template("news_tickers.html", intel=intel)
+
+@app.route("/news/ai")
+def news_ai():
+    intel = analyze_news(UNIVERSE, {})
+    return render_template("news_ai.html", intel=intel)
+
+@app.route("/news/sentiment")
+def news_sentiment():
+    intel = analyze_news(UNIVERSE, {})
+    return render_template("news_sentiment.html", intel=intel)
+
+
+# ============================================================
+#   AI LEARNING SUB‑PAGE ROUTES
+# ============================================================
+
+@app.route("/ai/train_rl")
+def ai_train_rl():
+    return render_template("ai_train_rl.html")
+
+@app.route("/ai/intel_backtest")
+def ai_intel_backtest():
+    return render_template("ai_intel_backtest.html")
+
+@app.route("/ai/intel_optimize")
+def ai_intel_optimize():
+    return render_template("ai_intel_optimize.html")
+
 @app.route("/train_news_rl")
 def train_news_rl():
     return render_template("train_news_rl.html")
 
-# ============================================================
-#   EXISTING API ENDPOINTS (unchanged)
-# ============================================================
-
-# (All your API routes remain exactly as they were — unchanged)
-# I did not remove or modify ANY backend logic.
 
 # ============================================================
-#   RUN SERVER
+#   INTELLIGENCE SUB‑PAGE ROUTES
 # ============================================================
 
-if __name__ == "__main__":
-    app.run(debug=True, host="0.0.0.0", port=5000)
+@app.route("/intel/signals")
+def intel_signals():
+    return render_template("intel_signals.html")
+
+@app.route("/intel/live")
+def intel_live_page():
+    return render_template("intel_live.html")
+
+
+# ============================================================
+#   DIAGNOSTICS SUB‑PAGE ROUTES
+# ============================================================
+
+@app.route("/diagnostics/system")
+def diagnostics_system():
+    return render_template("diagnostics_system.html")
+
+
+# ============================================================
+#   SETTINGS SUB‑PAGE ROUTES
+# ============================================================
+
+@app.route("/settings/api")
+def settings_api():
+    return render_template("settings_api.html")
