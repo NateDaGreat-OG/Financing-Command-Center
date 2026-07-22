@@ -1,32 +1,15 @@
 {% extends "base.html" %}
+
+{% block tabs %}
+<div class="top-tabs">
+    <a href="/news">Market News</a>
+    <a href="/news/tickers">Ticker News</a>
+    <a href="/news/ai">AI Filtered News</a>
+    <a href="/news/sentiment">Sentiment Analysis</a>
+</div>
+{% endblock %}
+
 {% block content %}
-
-<h2>News Intelligence Feed</h2>
-
-<p>Aggregated headlines, sentiment, event type, and recommended strategy.</p>
-
-{% for ticker, items in intel.items() %}
-    <h3>{{ ticker }}</h3>
-    <table class="table">
-        <thead>
-            <tr>
-                <th>Headline</th>
-                <th>Sentiment</th>
-                <th>Event Type</th>
-                <th>Recommended Strategy</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for item in items %}
-            <tr>
-                <td>{{ item.title }}</td>
-                <td>{{ item.sentiment }}</td>
-                <td>{{ item.event_type }}</td>
-                <td>{{ item.strategy }}</td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-{% endfor %}
-
+<h1>Market News</h1>
+<!-- your news feed content -->
 {% endblock %}

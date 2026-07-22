@@ -1,27 +1,14 @@
 {% extends "base.html" %}
+
+{% block tabs %}
+<div class="top-tabs">
+    <a href="/events">Upcoming IPOs</a>
+    <a href="/events/nasdaq">NASDAQ Additions</a>
+    <a href="/events/sec">SEC Filings</a>
+</div>
+{% endblock %}
+
 {% block content %}
-
-<h2>Upcoming IPOs & NASDAQ Additions (Next 3 Months)</h2>
-
-<table class="table">
-    <thead>
-        <tr>
-            <th>Type</th>
-            <th>Title</th>
-            <th>Date</th>
-            <th>Link</th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for e in events %}
-        <tr>
-            <td>{{ e.type }}</td>
-            <td>{{ e.title }}</td>
-            <td>{{ e.published }}</td>
-            <td><a href="{{ e.link }}" target="_blank">View</a></td>
-        </tr>
-        {% endfor %}
-    </tbody>
-</table>
-
+<h1>Upcoming IPOs</h1>
+<!-- your IPO table -->
 {% endblock %}

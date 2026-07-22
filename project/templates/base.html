@@ -1,8 +1,43 @@
-<nav class="navbar" style="background:#1e1e1e; padding:10px;">
-    <ul class="nav" style="list-style:none; display:flex; gap:20px; margin:0; padding:0;">
-        <li><a href="/" style="color:white; text-decoration:none;">Home</a></li>
-        <li><a href="/news" style="color:white; text-decoration:none;">News Feed</a></li>
-        <li><a href="/events" style="color:white; text-decoration:none;">IPO Calendar</a></li>
-        <li><a href="/train_news_rl" style="color:white; text-decoration:none;">Train News RL Agent</a></li>
-    </ul>
-</nav>
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Financing Command Center</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+
+<body>
+
+<div class="layout">
+
+    <!-- LEFT SIDEBAR -->
+    <aside class="sidebar">
+        <h2 class="logo">FCC</h2>
+        <ul class="sidebar-nav">
+            <li><a href="/">Dashboard</a></li>
+            <li><a href="/news">News</a></li>
+            <li><a href="/events">IPO Calendar</a></li>
+            <li><a href="/ai">AI Learning</a></li>
+            <li><a href="/strategies">Strategy Selection</a></li>
+            <li><a href="/rl">RL Training</a></li>
+            <li><a href="/intel">Intelligence</a></li>
+            <li><a href="/diagnostics">Diagnostics</a></li>
+        </ul>
+    </aside>
+
+    <!-- MAIN CONTENT AREA -->
+    <main class="main-content">
+
+        <!-- TOP TABS (dynamic per page) -->
+        {% block tabs %}
+        {% endblock %}
+
+        <!-- PAGE CONTENT -->
+        {% block content %}
+        {% endblock %}
+
+    </main>
+
+</div>
+
+</body>
+</html>
