@@ -165,23 +165,13 @@
 ├── project
 │   ├── .env
 │   ├── __init__.py
-│   ├── clone
-│   ├── instance
-│   │   └── rl_models
-│   ├── requirements.txt
-│   ├── rl
-│   │   └── __init__.py
-│   └── static
-│       ├── main.js
-│       └── styles.css
+│   └── requirements.txt
 ├── repo_tree.txt
 ├── requirements,txt
 ├── requirements.txt
 ├── rl
 │   └── __init__.py
 ├── run_backtest.py
-├── services
-│   └── __init__.py
 ├── tests
 │   ├── __init__.py
 │   ├── test_intelligence_layer.py
@@ -189,4 +179,4 @@
 │   └── test_rl_regression.py
 └── tracked_files.txt
 
-43 directories, 147 files
+38 directories, 142 files
