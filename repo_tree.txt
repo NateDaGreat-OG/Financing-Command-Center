@@ -6,6 +6,7 @@
 │   ├── README.md
 │   └── v
 │       └── cache
+│           └── nodeids
 ├── .vscode
 │   └── settings.json
 ├── AGENTS.md
@@ -36,12 +37,18 @@
 │   ├── routes
 │   │   ├── __init__.py
 │   │   ├── __pycache__
+│   │   │   ├── __init__.cpython-312.pyc
+│   │   │   ├── accounting.cpython-312.pyc
+│   │   │   ├── dashboard.cpython-312.pyc
+│   │   │   ├── news.cpython-312.pyc
+│   │   │   └── strategy.cpython-312.pyc
 │   │   ├── accounting.py
 │   │   ├── dashboard.py
 │   │   ├── news.py
 │   │   └── strategy.py
 │   ├── static
 │   │   ├── css
+│   │   │   └── styles.css
 │   │   └── js
 │   └── templates
 │       ├── accounting.html
@@ -66,6 +73,7 @@
 │   ├── script.py.mako
 │   └── versions
 │       ├── __pycache__
+│       │   └── e2a230e962cb_initial_schema.cpython-312.pyc
 │       └── e2a230e962cb_initial_schema.py
 ├── project
 │   ├── .env
@@ -78,12 +86,39 @@
 │   ├── backtest
 │   │   ├── __init__.py
 │   │   ├── __pycache__
+│   │   │   ├── __init__.cpython-312.pyc
+│   │   │   └── backtester.cpython-312.pyc
 │   │   └── backtester.py
 │   ├── clone
 │   ├── config.py
 │   ├── core
 │   │   ├── __init__.py
 │   │   ├── __pycache__
+│   │   │   ├── __init__.cpython-312.pyc
+│   │   │   ├── capital_manager.cpython-312.pyc
+│   │   │   ├── cycle_analyzer.cpython-312.pyc
+│   │   │   ├── diagnostics_layer.cpython-312.pyc
+│   │   │   ├── evolutionary_optimizer.cpython-312.pyc
+│   │   │   ├── execution_intelligence.cpython-312.pyc
+│   │   │   ├── genetic_engine.cpython-312.pyc
+│   │   │   ├── master_strategy_selector.cpython-312.pyc
+│   │   │   ├── optimizer.cpython-312.pyc
+│   │   │   ├── portfolio_risk_engine.cpython-312.pyc
+│   │   │   ├── risk_manager.cpython-312.pyc
+│   │   │   ├── rl_strategy_selector_agent.cpython-312.pyc
+│   │   │   ├── search_spaces.cpython-312.pyc
+│   │   │   ├── strategy_ai_utils.cpython-312.pyc
+│   │   │   ├── strategy_capital_adapter.cpython-312.pyc
+│   │   │   ├── strategy_cycle_adapter.cpython-312.pyc
+│   │   │   ├── strategy_fitness_evaluator.cpython-312.pyc
+│   │   │   ├── strategy_genome.cpython-312.pyc
+│   │   │   ├── strategy_governance.cpython-312.pyc
+│   │   │   ├── strategy_intelligence.cpython-312.pyc
+│   │   │   ├── strategy_lineage_tracker.cpython-312.pyc
+│   │   │   ├── strategy_registry.cpython-312.pyc
+│   │   │   ├── strategy_risk_adapter.cpython-312.pyc
+│   │   │   ├── strategy_rl_adapter.cpython-312.pyc
+│   │   │   └── trade_logger.cpython-312.pyc
 │   │   ├── capital_manager.py
 │   │   ├── cycle_analyzer.py
 │   │   ├── diagnostics_layer.py
@@ -103,6 +138,11 @@
 │   │   └── trade_logger.py
 │   ├── data
 │   │   ├── __pycache__
+│   │   │   ├── massive_daily_loader.cpython-312.pyc
+│   │   │   ├── massive_loader.cpython-312.pyc
+│   │   │   ├── massive_recent_loader.cpython-312.pyc
+│   │   │   ├── massive_today_loader.cpython-312.pyc
+│   │   │   └── massive_today_minutes.cpython-312.pyc
 │   │   ├── massive_daily_loader.py
 │   │   ├── massive_loader.py
 │   │   ├── massive_recent_loader.py
@@ -111,6 +151,11 @@
 │   ├── events
 │   │   ├── __init__.py
 │   │   ├── __pycache__
+│   │   │   ├── __init__.cpython-312.pyc
+│   │   │   ├── event_aggregator.cpython-312.pyc
+│   │   │   ├── event_filter.cpython-312.pyc
+│   │   │   ├── ipo_scraper.cpython-312.pyc
+│   │   │   └── nasdaq_additions_scraper.cpython-312.pyc
 │   │   ├── event_filter.py
 │   │   ├── event_intel.py
 │   │   ├── ipo_scraper.py
@@ -119,6 +164,11 @@
 │   │   └── rl_models
 │   ├── intel
 │   │   ├── __pycache__
+│   │   │   ├── strategy_profiles.cpython-312.pyc
+│   │   │   ├── ticker_intel.cpython-312.pyc
+│   │   │   ├── ticker_rl_refiner.cpython-312.pyc
+│   │   │   ├── ticker_scanner.cpython-312.pyc
+│   │   │   └── ticker_selector.cpython-312.pyc
 │   │   ├── strategy_profiles.py
 │   │   ├── ticker_intel.py
 │   │   ├── ticker_rl_refiner.py
@@ -126,6 +176,12 @@
 │   │   └── ticker_selector.py
 │   ├── news
 │   │   ├── __pycache__
+│   │   │   ├── news_aggregator.cpython-312.pyc
+│   │   │   ├── news_features.cpython-312.pyc
+│   │   │   ├── news_intel.cpython-312.pyc
+│   │   │   ├── news_rl_refiner.cpython-312.pyc
+│   │   │   ├── news_scraper.cpython-312.pyc
+│   │   │   └── news_strategy_mapper.cpython-312.pyc
 │   │   ├── news_aggregator.py
 │   │   ├── news_features.py
 │   │   ├── news_intel.py
@@ -143,6 +199,12 @@
 │   ├── rl
 │   │   ├── __init__.py
 │   │   ├── __pycache__
+│   │   │   ├── __init__.cpython-312.pyc
+│   │   │   ├── agent_base.cpython-312.pyc
+│   │   │   ├── dqn_agent.cpython-312.pyc
+│   │   │   ├── policy_gradient_agent.cpython-312.pyc
+│   │   │   ├── rl_utils.cpython-312.pyc
+│   │   │   └── trading_env.cpython-312.pyc
 │   │   ├── agent_base.py
 │   │   ├── dqn_agent.py
 │   │   ├── policy_gradient_agent.py
@@ -151,6 +213,15 @@
 │   ├── services
 │   │   ├── __init__.py
 │   │   ├── __pycache__
+│   │   │   ├── __init__.cpython-312.pyc
+│   │   │   ├── alpaca_client.cpython-312.pyc
+│   │   │   ├── backtester_intel_adapter.cpython-312.pyc
+│   │   │   ├── cycle_data_client.cpython-312.pyc
+│   │   │   ├── evolution_orchestrator.cpython-312.pyc
+│   │   │   ├── live_trading_orchestrator.cpython-312.pyc
+│   │   │   ├── massive_client.cpython-312.pyc
+│   │   │   ├── optimizer_intel_adapter.cpython-312.pyc
+│   │   │   └── strategy_population_store.cpython-312.pyc
 │   │   ├── alpaca_client.py
 │   │   ├── backtester_intel_adapter.py
 │   │   ├── cycle_data_client.py
@@ -163,6 +234,12 @@
 │   ├── strategies
 │   │   ├── __init__.py
 │   │   ├── __pycache__
+│   │   │   ├── __init__.cpython-312.pyc
+│   │   │   ├── liquidity_window.cpython-312.pyc
+│   │   │   ├── magic_formula.cpython-312.pyc
+│   │   │   ├── scalping_premarket.cpython-312.pyc
+│   │   │   ├── trend_continuation.cpython-312.pyc
+│   │   │   └── volatility_compression.cpython-312.pyc
 │   │   ├── emerging_shotgun.py
 │   │   ├── liquidity_window.py
 │   │   ├── magic_formula.py
@@ -222,4 +299,4 @@
 │   └── test_rl_regression.py
 └── tracked_files.txt
 
-58 directories, 165 files
+58 directories, 242 files
