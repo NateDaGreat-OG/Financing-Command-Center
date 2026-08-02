@@ -26,6 +26,7 @@
 │   │   ├── search_spaces.py
 │   │   └── strategy_ai_utils.py
 │   ├── execution_agent
+│   │   ├── backtester.py
 │   │   ├── backtester_intel_adapter.py
 │   │   ├── broker_adapter.py
 │   │   ├── execution_intelligence.py
@@ -33,6 +34,36 @@
 │   │   └── optimizer_intel_adapter.py
 │   ├── monitoring_agent
 │   │   ├── backtests.json
+│   │   ├── templates
+│   │   │   ├── ai.html
+│   │   │   ├── ai_intel_backtest.html
+│   │   │   ├── ai_intel_optimize.html
+│   │   │   ├── ai_train_rl.html
+│   │   │   ├── base.html
+│   │   │   ├── dashboard.html
+│   │   │   ├── dashboard_combined.html
+│   │   │   ├── dashboard_cycles.html
+│   │   │   ├── dashboard_overview.html
+│   │   │   ├── dashboard_risk.html
+│   │   │   ├── dashboard_rl.html
+│   │   │   ├── dashboard_strategies.html
+│   │   │   ├── diagnostics.html
+│   │   │   ├── diagnostics_system.html
+│   │   │   ├── events.html
+│   │   │   ├── index.html
+│   │   │   ├── intel.html
+│   │   │   ├── intel_live.html
+│   │   │   ├── intel_signals.html
+│   │   │   ├── news.html
+│   │   │   ├── news_ai.html
+│   │   │   ├── news_sentiment.html
+│   │   │   ├── news_tickers.html
+│   │   │   ├── rl.html
+│   │   │   ├── settings.html
+│   │   │   ├── settings_api.html
+│   │   │   ├── strategies.html
+│   │   │   ├── strategies_emerging_shotgun.html
+│   │   │   └── train_news_rl.html
 │   │   └── trade_logger.py
 │   ├── portfolio_manager
 │   │   └── capital_manager.py
@@ -43,6 +74,10 @@
 │   │   └── risk_checks.py
 │   ├── security_agent
 │   ├── signal_generator
+│   │   ├── event_filter.py
+│   │   ├── event_intel.py
+│   │   ├── ipo_scraper.py
+│   │   ├── nasdaq_additions_scraper.py
 │   │   ├── news_aggregator.py
 │   │   ├── news_features.py
 │   │   ├── news_intel.py
@@ -56,6 +91,10 @@
 │       ├── emerging_shotgun.py
 │       ├── liquidity_window.py
 │       ├── magic_formula.py
+│       ├── news_rl_agent.py
+│       ├── news_rl_env.py
+│       ├── news_rl_trainer.py
+│       ├── news_rl_utils.py
 │       ├── policy_gradient_agent.py
 │       ├── rl_utils.py
 │       ├── scalping_premarket.py
@@ -126,69 +165,15 @@
 ├── project
 │   ├── .env
 │   ├── __init__.py
-│   ├── backtest
-│   │   ├── __init__.py
-│   │   └── backtester.py
 │   ├── clone
-│   ├── core
-│   │   └── __init__.py
-│   ├── data
-│   ├── events
-│   │   ├── __init__.py
-│   │   ├── event_filter.py
-│   │   ├── event_intel.py
-│   │   ├── ipo_scraper.py
-│   │   └── nasdaq_additions_scraper.py
 │   ├── instance
 │   │   └── rl_models
-│   ├── intel
-│   ├── news
-│   ├── news_rl
-│   │   ├── __init__.py
-│   │   ├── agent.py
-│   │   ├── env.py
-│   │   ├── trainer.py
-│   │   └── utils.py
 │   ├── requirements.txt
 │   ├── rl
 │   │   └── __init__.py
-│   ├── services
-│   │   └── __init__.py
-│   ├── static
-│   │   ├── main.js
-│   │   └── styles.css
-│   ├── strategies
-│   │   └── __init__.py
-│   └── templates
-│       ├── ai.html
-│       ├── ai_intel_backtest.html
-│       ├── ai_intel_optimize.html
-│       ├── ai_train_rl.html
-│       ├── base.html
-│       ├── dashboard.html
-│       ├── dashboard_combined.html
-│       ├── dashboard_cycles.html
-│       ├── dashboard_overview.html
-│       ├── dashboard_risk.html
-│       ├── dashboard_rl.html
-│       ├── dashboard_strategies.html
-│       ├── diagnostics.html
-│       ├── diagnostics_system.html
-│       ├── events.html
-│       ├── index.html
-│       ├── intel.html
-│       ├── intel_live.html
-│       ├── intel_signals.html
-│       ├── news.html
-│       ├── news_ai.html
-│       ├── news_sentiment.html
-│       ├── news_tickers.html
-│       ├── rl.html
-│       ├── settings.html
-│       ├── settings_api.html
-│       ├── strategies.html
-│       ├── strategies_emerging_shotgun.html
-│       └── train_news_rl.html
+│   └── static
+│       ├── main.js
+│       └── styles.css
 ├── repo_tree.txt
 ├── requirements,txt
 ├── requirements.txt
@@ -204,4 +189,4 @@
 │   └── test_rl_regression.py
 └── tracked_files.txt
 
-52 directories, 153 files
+43 directories, 147 files
