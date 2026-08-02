@@ -1,5 +1,6 @@
 import importlib
 from typing import Any, Dict, Optional
+from strategies.emerging_shotgun import emerging_shotgun_strategy
 
 STRATEGY_MAP = {
     "scalping": ["scalping_premarket"],
@@ -7,6 +8,7 @@ STRATEGY_MAP = {
     "swing_trading": ["trend_continuation", "volatility_compression"],
     "short_term_investing": ["magic_formula"],
     "long_term_investing": ["magic_formula"],
+    "emerging_shotgun": emerging_shotgun_strategy
 }
 
 

@@ -1,0 +1,225 @@
+.
+├── .gitignore
+├── .pytest_cache
+│   ├── .gitignore
+│   ├── CACHEDIR.TAG
+│   ├── README.md
+│   └── v
+│       └── cache
+├── .vscode
+│   └── settings.json
+├── AGENTS.md
+├── Clone
+├── README.md
+├── backtest
+│   ├── __init__.py
+│   └── __pycache__
+│       └── __init__.cpython-312.pyc
+├── backtest_results
+│   ├── liquidity_window.json
+│   ├── magic_formula.json
+│   ├── scalping_premarket.json
+│   ├── trend_continuation.json
+│   └── volatility_compression.json
+├── core
+│   ├── __init__.py
+│   └── __pycache__
+│       └── __init__.cpython-312.pyc
+├── financial_command_center
+│   ├── __init__.py
+│   ├── __pycache__
+│   │   ├── __init__.cpython-312.pyc
+│   │   ├── app.cpython-312.pyc
+│   │   └── models.cpython-312.pyc
+│   ├── app.py
+│   ├── models.py
+│   ├── routes
+│   │   ├── __init__.py
+│   │   ├── __pycache__
+│   │   ├── accounting.py
+│   │   ├── dashboard.py
+│   │   ├── news.py
+│   │   └── strategy.py
+│   ├── static
+│   │   ├── css
+│   │   └── js
+│   └── templates
+│       ├── accounting.html
+│       ├── base.html
+│       ├── dashboard.html
+│       ├── news.html
+│       ├── strategy.html
+│       └── trades.html
+├── financing_command_center.egg-info
+├── instance
+│   ├── command_center.db
+│   ├── evolution
+│   └── rl_models
+├── logs
+│   └── backtests.json
+├── migrations
+│   ├── README
+│   ├── __pycache__
+│   │   └── env.cpython-312.pyc
+│   ├── alembic.ini
+│   ├── env.py
+│   ├── script.py.mako
+│   └── versions
+│       ├── __pycache__
+│       └── e2a230e962cb_initial_schema.py
+├── project
+│   ├── .env
+│   ├── __init__.py
+│   ├── __pycache__
+│   │   ├── __init__.cpython-312.pyc
+│   │   ├── app.cpython-312.pyc
+│   │   └── config.cpython-312.pyc
+│   ├── app.py
+│   ├── backtest
+│   │   ├── __init__.py
+│   │   ├── __pycache__
+│   │   └── backtester.py
+│   ├── clone
+│   ├── config.py
+│   ├── core
+│   │   ├── __init__.py
+│   │   ├── __pycache__
+│   │   ├── capital_manager.py
+│   │   ├── cycle_analyzer.py
+│   │   ├── diagnostics_layer.py
+│   │   ├── execution_intelligence.py
+│   │   ├── optimizer.py
+│   │   ├── portfolio_risk_engine.py
+│   │   ├── risk_manager.py
+│   │   ├── search_spaces.py
+│   │   ├── strategy_ai_utils.py
+│   │   ├── strategy_capital_adapter.py
+│   │   ├── strategy_cycle_adapter.py
+│   │   ├── strategy_governance.py
+│   │   ├── strategy_intelligence.py
+│   │   ├── strategy_registry.py
+│   │   ├── strategy_risk_adapter.py
+│   │   ├── strategy_rl_adapter.py
+│   │   └── trade_logger.py
+│   ├── data
+│   │   ├── __pycache__
+│   │   ├── massive_daily_loader.py
+│   │   ├── massive_loader.py
+│   │   ├── massive_recent_loader.py
+│   │   ├── massive_today_loader.py
+│   │   └── massive_today_minutes.py
+│   ├── events
+│   │   ├── __init__.py
+│   │   ├── __pycache__
+│   │   ├── event_filter.py
+│   │   ├── event_intel.py
+│   │   ├── ipo_scraper.py
+│   │   └── nasdaq_additions_scraper.py
+│   ├── instance
+│   │   └── rl_models
+│   ├── intel
+│   │   ├── __pycache__
+│   │   ├── strategy_profiles.py
+│   │   ├── ticker_intel.py
+│   │   ├── ticker_rl_refiner.py
+│   │   ├── ticker_scanner.py
+│   │   └── ticker_selector.py
+│   ├── news
+│   │   ├── __pycache__
+│   │   ├── news_aggregator.py
+│   │   ├── news_features.py
+│   │   ├── news_intel.py
+│   │   ├── news_reaction_model.py
+│   │   ├── news_rl_refiner.py
+│   │   ├── news_scraper.py
+│   │   └── news_strategy_mapper.py
+│   ├── news_rl
+│   │   ├── __init__.py
+│   │   ├── agent.py
+│   │   ├── env.py
+│   │   ├── trainer.py
+│   │   └── utils.py
+│   ├── requirements.txt
+│   ├── rl
+│   │   ├── __init__.py
+│   │   ├── __pycache__
+│   │   ├── agent_base.py
+│   │   ├── dqn_agent.py
+│   │   ├── policy_gradient_agent.py
+│   │   ├── rl_utils.py
+│   │   └── trading_env.py
+│   ├── services
+│   │   ├── __init__.py
+│   │   ├── __pycache__
+│   │   ├── alpaca_client.py
+│   │   ├── backtester_intel_adapter.py
+│   │   ├── cycle_data_client.py
+│   │   ├── live_trading_orchestrator.py
+│   │   ├── massive_client.py
+│   │   └── optimizer_intel_adapter.py
+│   ├── static
+│   │   ├── main.js
+│   │   └── styles.css
+│   ├── strategies
+│   │   ├── __init__.py
+│   │   ├── __pycache__
+│   │   ├── emerging_shotgun.py
+│   │   ├── liquidity_window.py
+│   │   ├── magic_formula.py
+│   │   ├── scalping_premarket.py
+│   │   ├── trend_continuation.py
+│   │   └── volatility_compression.py
+│   └── templates
+│       ├── ai.html
+│       ├── ai_intel_backtest.html
+│       ├── ai_intel_optimize.html
+│       ├── ai_train_rl.html
+│       ├── base.html
+│       ├── dashboard.html
+│       ├── dashboard_combined.html
+│       ├── dashboard_cycles.html
+│       ├── dashboard_overview.html
+│       ├── dashboard_risk.html
+│       ├── dashboard_rl.html
+│       ├── dashboard_strategies.html
+│       ├── diagnostics.html
+│       ├── diagnostics_system.html
+│       ├── events.html
+│       ├── index.html
+│       ├── intel.html
+│       ├── intel_live.html
+│       ├── intel_signals.html
+│       ├── news.html
+│       ├── news_ai.html
+│       ├── news_sentiment.html
+│       ├── news_tickers.html
+│       ├── rl.html
+│       ├── settings.html
+│       ├── settings_api.html
+│       ├── strategies.html
+│       ├── strategies_emerging_shotgun.html
+│       └── train_news_rl.html
+├── repo_tree.txt
+├── requirements,txt
+├── requirements.txt
+├── rl
+│   ├── __init__.py
+│   └── __pycache__
+│       └── __init__.cpython-312.pyc
+├── run_backtest.py
+├── services
+│   ├── __init__.py
+│   └── __pycache__
+│       └── __init__.cpython-312.pyc
+├── tests
+│   ├── __init__.py
+│   ├── __pycache__
+│   │   ├── __init__.cpython-312.pyc
+│   │   ├── test_project_package_imports.cpython-312-pytest-9.1.1.pyc
+│   │   └── test_rl_regression.cpython-312-pytest-9.1.1.pyc
+│   ├── test_intelligence_layer.py
+│   ├── test_project_package_imports.py
+│   └── test_rl_regression.py
+└── tracked_files.txt
+
+58 directories, 165 files

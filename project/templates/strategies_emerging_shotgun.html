@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+
+{% block tabs %}
+<div class="top-tabs">
+    <a href="/strategies">Overview</a>
+    <a href="/strategies/emerging_shotgun" class="active">Emerging Shotgun</a>
+</div>
+{% endblock %}
+
+{% block content %}
+<h1>Emerging Shotgun Strategy</h1>
+
+<p>
+Emerging Shotgun is a high‑velocity breakout strategy designed to identify early‑stage explosive moves in emerging tickers. 
+It combines:
+</p>
+
+<ul>
+    <li>Cycle alignment (short‑term + mid‑term)</li>
+    <li>Volume shock detection</li>
+    <li>Massive news sentiment triggers</li>
+    <li>RL‑based probability scoring</li>
+    <li>Shotgun‑style multi‑signal confirmation</li>
+</ul>
+
+<h2>Core Logic</h2>
+<p>
+The strategy fires when multiple micro‑signals converge within a tight window, producing a “shotgun burst” of confirmation.
+</p>
+
+<h2>Signals Used</h2>
+<ul>
+    <li>Volume Burst Index (VBI)</li>
+    <li>Cycle Momentum Delta (CMD)</li>
+    <li>News Sentiment Spike (NSS)</li>
+    <li>RL Probability > 0.62</li>
+    <li>Breakout Structure Integrity (BSI)</li>
+</ul>
+
+<h2>Execution</h2>
+<p>
+Positions are taken only when all signals align within a 3‑minute window. Stops and targets are dynamically adjusted using your RL engine.
+</p>
+
+{% endblock %}

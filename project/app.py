@@ -175,6 +175,10 @@ def diagnostics_home():
 def settings_home():
     return render_template("settings.html")
 
+@app.route("/strategies/emerging_shotgun")
+def strategies_emerging_shotgun():
+    return render_template("strategies_emerging_shotgun.html")
+
 
 # ============================================================
 #   DASHBOARD SUB‑PAGE ROUTES

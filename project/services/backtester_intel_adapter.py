@@ -30,6 +30,7 @@ from core.risk_manager import RiskManager
 from core.strategy_intelligence import StrategyIntelligence
 from core.strategy_registry import create_intelligence_layer
 from core.trade_logger import TradeLogger
+from strategies.magic_formula import generate_signals
 
 logger = logging.getLogger(__name__)
 
@@ -217,6 +218,15 @@ class BacktesterIntelAdapter:
         }
         self.trade_logger.log_backtest(result)
         return result
+        if strategy == "emerging_shotgun":
+    df = generate_signals(data)
+    last_row = df.iloc[-1]
+    return {
+        "ticker": ticker,
+        "signal": "emerging_shotgun",
+        "score": float(last_row["shotgun"]),
+        "details": "Shotgun signal fired" if last_row["shotgun"] else "No signal"
+    }
 
 
 # ---------------------------------------------------------------------------
@@ -343,4 +353,31 @@ def _expanded_metrics(
         "win_rate": round(win_rate_frac * 100, 2),
         "trade_count": len(trade_log),
         "final_equity": round(final_equity, 2),
+    }
+
+def build_emerging_shotgun_report(
+    symbol: str,
+    metrics: Dict[str, Any],
+    trades: List[Dict[str, Any]],
+    params: Dict[str, Any]
+) -> Dict[str, Any]:
+    return {
+        "symbol": symbol,
+        "params": params,
+        "summary": {
+            "cagr": metrics.get("cagr"),
+            "sharpe": metrics.get("sharpe"),
+            "max_drawdown": metrics.get("max_drawdown"),
+            "avg_r": metrics.get("avg_r"),
+            "win_rate": metrics.get("win_rate"),
+            "profit_factor": metrics.get("profit_factor"),
+            "total_trades": metrics.get("total_trades"),
+        },
+        "risk": {
+            "max_loss": metrics.get("max_loss"),
+            "avg_loss": metrics.get("avg_loss"),
+            "avg_win": metrics.get("avg_win"),
+            "exposure": metrics.get("exposure"),
+        },
+        "trades": trades,
     }

@@ -33,10 +33,19 @@ MAGIC_FORMULA_SPACE = {
     "min_market_cap": [500e6, 1e9, 5e9],
 }
 
+EMERGING_SHOTGUN_SEARCH_SPACE = {
+    "vol_mult": [1.5, 2.0, 2.5, 3.0],
+    "stop_pct": [0.005, 0.01, 0.015],
+    "target_pct": [0.015, 0.02, 0.03],
+    "min_range_mult": [1.2, 1.5, 2.0],
+    "min_price": [5.0, 10.0, 20.0],
+}
+
 DEFAULT_SEARCH_SPACES = {
     "scalping_premarket": SCALPING_SPACE,
     "trend_continuation": TREND_CONTINUATION_SPACE,
     "volatility_compression": VOLATILITY_COMPRESSION_SPACE,
     "liquidity_window": LIQUIDITY_WINDOW_SPACE,
     "magic_formula": MAGIC_FORMULA_SPACE,
+    "emerging_shotgun": EMERGING_SHOTGUN_SEARCH_SPACE,
 }

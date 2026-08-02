@@ -4,7 +4,7 @@ import importlib
 import random
 from typing import Any, Dict, List
 
-from flask_migrate import history
+from core.search_spaces import DEFAULT_SEARCH_SPACES
 try:
     from ..backtest.backtester import Backtester
     from .risk_manager import RiskManager
